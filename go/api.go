@@ -15,7 +15,7 @@
 package vanus
 
 import (
-	"github.com/cloudevents/sdk-go/v2"
+	v2 "github.com/cloudevents/sdk-go/v2"
 )
 
 type Client interface {
