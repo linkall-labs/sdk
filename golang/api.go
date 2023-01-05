@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package vanus
+package golang
 
 import (
 	v2 "github.com/cloudevents/sdk-go/v2"
@@ -20,7 +20,7 @@ import (
 
 type Client interface {
 	Send(eventbusName string, events ...*v2.Event) error
-	Subscribe(subscriptionID uint64) (<-chan Message, error)
+	Subscribe(subscriptionID string) (<-chan Message, error)
 	Close() error
 }
 
