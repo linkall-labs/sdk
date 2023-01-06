@@ -1,14 +1,9 @@
-module github.com/linkall-labs/sdk
+module github.com/linkall-labs/sdk/proto
 
 go 1.18
 
-replace (
-	github.com/linkall-labs/sdk/golang => ./golang
-	github.com/linkall-labs/sdk/proto => ./proto
-)
-
 require (
-	github.com/linkall-labs/vanus/proto v0.0.0-20230105121006-1395ee889925
+	github.com/linkall-labs/vanus/proto v0.0.0-20230105120741-303e88adbf46
 	google.golang.org/grpc v1.51.0
 	google.golang.org/protobuf v1.28.1
 )
