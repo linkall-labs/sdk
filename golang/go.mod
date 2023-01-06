@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/cloudevents/sdk-go/v2 v2.12.0
 	github.com/google/uuid v1.3.0
-	github.com/linkall-labs/sdk/proto v0.0.0-00010101000000-000000000000
+	github.com/linkall-labs/sdk/proto v0.0.0-20230106022440-7302e243c0b6
 	github.com/linkall-labs/vanus/proto v0.0.0-20230105121006-1395ee889925
 	google.golang.org/grpc v1.51.0
 	google.golang.org/protobuf v1.28.1
@@ -24,5 +24,3 @@ require (
 	golang.org/x/text v0.4.0 // indirect
 	google.golang.org/genproto v0.0.0-20221027153422-115e99e71e1c // indirect
 )
-
-replace github.com/linkall-labs/sdk/proto => ../proto
