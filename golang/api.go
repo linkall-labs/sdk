@@ -15,17 +15,60 @@
 package golang
 
 import (
+	"context"
+
 	v2 "github.com/cloudevents/sdk-go/v2"
+	metapb "github.com/linkall-labs/vanus/proto/pkg/meta"
 )
 
 type Client interface {
-	Send(eventbusName string, events ...*v2.Event) error
-	Subscribe(subscriptionID string) (<-chan Message, error)
-	Close() error
+	Publisher(opts *PublishOptions) Publisher
+	Subscriber(opts *SubscribeOptions) (Subscriber, error)
+	Controller() Controller
+	Disconnect() error
+}
+
+type Publisher interface {
+	Eventbus() string
+	Publish(ctx context.Context, events ...*v2.Event) error
+}
+
+type Subscriber interface {
+	SubscriptionID() string
+	Subscribe(ctx context.Context) (<-chan Message, error)
 }
 
 type Message interface {
 	GetEvent() *v2.Event
 	Success() error
 	Failed(err error) error
+}
+
+type PublishOptions struct {
+	Eventbus string
+}
+
+type SubscribeOptions struct {
+	SubscriptionID string
+}
+
+type Controller interface {
+	Eventbus(name string) Eventbus
+	Subscription(id string) Subscription
+}
+
+type Eventbus interface {
+	List() ([]*metapb.EventBus, error)
+	Get() (*metapb.EventBus, error)
+	Create() error
+	Delete() error
+}
+
+type Subscription interface {
+	List() ([]*metapb.Subscription, error)
+	Get() (*metapb.Subscription, error)
+	Create() error
+	Delete() error
+	Pause() error
+	Resume() error
 }
