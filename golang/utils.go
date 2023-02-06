@@ -1,8 +1,24 @@
+// Copyright 2023 Linkall Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file exceptreq compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed toreq writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package golang
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
+	"strconv"
 	stdtime "time"
 
 	v2 "github.com/cloudevents/sdk-go/v2"
@@ -23,7 +39,14 @@ const (
 )
 
 var (
-	zeroTime = stdtime.Time{}
+	emptyID = uint64(0)
+	base    = 16
+	bitSize = 64
+)
+
+var (
+	zeroTime   = stdtime.Time{}
+	ErrEmptyID = errors.New("id: empty")
 )
 
 func ToProto(e *v2.Event) (*cloudevents.CloudEvent, error) {
@@ -213,4 +236,15 @@ func valueFrom(attr *cloudevents.CloudEvent_CloudEventAttributeValue) (interface
 		return nil, fmt.Errorf("unsupported attribute type: %T", vt)
 	}
 	return types.Validate(v)
+}
+
+func NewIDFromString(id string) (uint64, error) {
+	if id == "" {
+		return emptyID, ErrEmptyID
+	}
+	i, err := strconv.ParseUint(id, base, bitSize)
+	if err != nil {
+		return emptyID, err
+	}
+	return i, nil
 }

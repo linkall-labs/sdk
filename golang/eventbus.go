@@ -1,0 +1,60 @@
+// Copyright 2023 Linkall Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file exceptreq compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed toreq writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package golang
+
+import (
+	"context"
+
+	"github.com/golang/protobuf/ptypes/empty"
+	ctrlpb "github.com/linkall-labs/vanus/proto/pkg/controller"
+	metapb "github.com/linkall-labs/vanus/proto/pkg/meta"
+	proxypb "github.com/linkall-labs/vanus/proto/pkg/proxy"
+)
+
+type eventbus struct {
+	name       string
+	controller proxypb.ControllerProxyClient
+}
+
+func (eb *eventbus) List() ([]*metapb.EventBus, error) {
+	res, err := eb.controller.ListEventBus(context.Background(), &empty.Empty{})
+	if err != nil {
+		return nil, err
+	}
+	return res.GetEventbus(), nil
+}
+
+func (eb *eventbus) Get() (*metapb.EventBus, error) {
+	return eb.controller.GetEventBus(context.Background(), &metapb.EventBus{Name: eb.name})
+}
+
+func (eb *eventbus) Create() error {
+	_, err := eb.controller.CreateEventBus(context.Background(), &ctrlpb.CreateEventBusRequest{
+		Name:      eb.name,
+		LogNumber: 1,
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (eb *eventbus) Delete() error {
+	_, err := eb.controller.DeleteEventBus(context.Background(), &metapb.EventBus{Name: eb.name})
+	if err != nil {
+		return err
+	}
+	return nil
+}

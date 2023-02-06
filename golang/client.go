@@ -1,182 +1,77 @@
+// Copyright 2023 Linkall Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file exceptreq compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed toreq writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package golang
 
 import (
 	"context"
+	"errors"
 	"sync"
 
-	v2 "github.com/cloudevents/sdk-go/v2"
-	vanuspb "github.com/linkall-labs/sdk/proto/pkg/vanus"
-	"github.com/linkall-labs/vanus/proto/pkg/cloudevents"
+	"github.com/linkall-labs/vanus/observability/log"
+	proxypb "github.com/linkall-labs/vanus/proto/pkg/proxy"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-type Config struct {
+type ClientOptions struct {
 	Endpoint string
 }
 
 type streamState string
 
 var (
-	stateRunning streamState = "running"
-	stateClosed  streamState = "closed"
+	stateInitialized streamState = "initialized"
+	stateRunning     streamState = "running"
+	stateClosed      streamState = "closed"
 )
 
-type streamCache struct {
-	subscribeStream vanuspb.Client_SubscribeClient
-	ackStream       vanuspb.Client_AckClient
-	messagec        chan Message
-	state           streamState
-}
-
-func newStreamCache(
-	subscribeStream vanuspb.Client_SubscribeClient, ackStream vanuspb.Client_AckClient, ch chan Message,
-) *streamCache {
-	return &streamCache{
-		subscribeStream: subscribeStream,
-		ackStream:       ackStream,
-		messagec:        ch,
-		state:           stateRunning,
-	}
-}
-
-func (sc *streamCache) release() {
-	sc.subscribeStream.CloseSend()
-	sc.subscribeStream = nil
-	sc.ackStream.CloseSend()
-	sc.ackStream = nil
-	close(sc.messagec)
-	sc.state = stateClosed
-}
-
 type client struct {
-	Endpoint    string
-	proxy       vanuspb.ClientClient
-	streamCache sync.Map
-	mu          sync.Mutex
+	endpoint        string
+	store           proxypb.StoreProxyClient
+	controller      proxypb.ControllerProxyClient
+	subscriberCache sync.Map
+	publisherCache  sync.Map
+	subMu           sync.RWMutex
+	pubMu           sync.RWMutex
 }
 
-func New(cfg *Config) Client {
+func Connect(options *ClientOptions) (Client, error) {
+	if options.Endpoint == "" {
+		log.Error(context.Background(), "endpoint is required for client", nil)
+		return nil, errors.New("endpoint is required for client")
+	}
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	conn, err := grpc.Dial(cfg.Endpoint, opts...)
+	conn, err := grpc.Dial(options.Endpoint, opts...)
 	if err != nil {
-		return nil
+		log.Error(context.Background(), "grpc dial error", map[string]interface{}{
+			log.KeyError: err,
+		})
+		return nil, err
 	}
 	return &client{
-		Endpoint: cfg.Endpoint,
-		proxy:    vanuspb.NewClientClient(conn),
-	}
+		endpoint:   options.Endpoint,
+		store:      proxypb.NewStoreProxyClient(conn),
+		controller: proxypb.NewControllerProxyClient(conn),
+	}, nil
 }
 
-func (c *client) Send(eventbusName string, events ...*v2.Event) error {
-	eventpb, err := ToProto(events[0])
-	if err != nil {
-		return err
-	}
-	in := &vanuspb.PublishRequest{
-		EventbusName: eventbusName,
-		Events: &cloudevents.CloudEventBatch{
-			Events: []*cloudevents.CloudEvent{eventpb},
-		},
-	}
-	_, err = c.proxy.Publish(context.Background(), in)
-	if err != nil {
-		return err
-	}
+func (c *client) Disconnect() error {
 	return nil
-}
-
-func (c *client) Subscribe(subscriptionID string) (<-chan Message, error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	value, ok := c.streamCache.Load(subscriptionID)
-	if ok && value.(*streamCache).state == stateRunning {
-		return value.(*streamCache).messagec, nil
-	}
-
-	in := &vanuspb.SubscribeRequest{
-		SubscriptionId: subscriptionID,
-	}
-	stream, err := c.proxy.Subscribe(context.Background(), in)
-	if err != nil {
-		return nil, err
-	}
-
-	ackStream, err := c.proxy.Ack(context.Background())
-	if err != nil {
-		stream.CloseSend()
-		return nil, err
-	}
-
-	messageC := make(chan Message, 32)
-	cache := newStreamCache(stream, ackStream, messageC)
-	c.streamCache.Store(subscriptionID, cache)
-
-	go func(cache *streamCache) {
-		for {
-			resp, err := cache.subscribeStream.Recv()
-			if err != nil {
-				cache.release()
-				return
-			}
-			ackFunc := func(result bool) error {
-				req := &vanuspb.AckRequest{
-					SequenceId:     resp.SequenceId,
-					SubscriptionId: subscriptionID,
-					Success:        result,
-				}
-				err = cache.ackStream.Send(req)
-				if err != nil {
-					cache.release()
-					return err
-				}
-				return nil
-			}
-			if batch := resp.GetEvents(); batch != nil {
-				if eventpbs := batch.GetEvents(); len(eventpbs) > 0 {
-					for _, eventpb := range eventpbs {
-						event, err2 := FromProto(eventpb)
-						if err2 != nil {
-							// TODO(jiangkai): check err
-							continue
-						}
-						cache.messagec <- newMessage(ackFunc, event)
-					}
-				}
-			}
-		}
-	}(cache)
-	return messageC, nil
 }
 
 func (c *client) Close() error {
 	return nil
-}
-
-type ackCallback func(result bool) error
-
-type message struct {
-	event *v2.Event
-	ack   ackCallback
-}
-
-func newMessage(cb ackCallback, e *v2.Event) Message {
-	return &message{
-		event: e,
-		ack:   cb,
-	}
-}
-
-func (m *message) GetEvent() *v2.Event {
-	return m.event
-}
-
-func (m *message) Success() error {
-	return m.ack(true)
-}
-
-func (m *message) Failed(err error) error {
-	return m.ack(false)
 }
