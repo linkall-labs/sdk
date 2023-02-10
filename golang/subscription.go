@@ -1,18 +1,18 @@
 // Copyright 2023 Linkall Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file exceptreq compliance with the License.
+// you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//    http://www.apache.org/licenses/LICENSE-2.0
 //
-// Unless required by applicable law or agreed toreq writing, software
+// Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package golang
+package vanus
 
 import (
 	"context"
@@ -27,7 +27,7 @@ type subscription struct {
 	controller proxypb.ControllerProxyClient
 }
 
-func (s *subscription) List() ([]*metapb.Subscription, error) {
+func (s *subscription) List(ctx context.Context) ([]*metapb.Subscription, error) {
 	res, err := s.controller.ListSubscription(context.Background(), &ctrlpb.ListSubscriptionRequest{})
 	if err != nil {
 		return nil, err
@@ -35,7 +35,7 @@ func (s *subscription) List() ([]*metapb.Subscription, error) {
 	return res.GetSubscription(), nil
 }
 
-func (s *subscription) Get() (*metapb.Subscription, error) {
+func (s *subscription) Get(ctx context.Context) (*metapb.Subscription, error) {
 	id, err := NewIDFromString(s.id)
 	if err != nil {
 		return nil, err
@@ -43,7 +43,7 @@ func (s *subscription) Get() (*metapb.Subscription, error) {
 	return s.controller.GetSubscription(context.Background(), &ctrlpb.GetSubscriptionRequest{Id: id})
 }
 
-func (s *subscription) Create() error {
+func (s *subscription) Create(ctx context.Context) error {
 	_, err := s.controller.CreateSubscription(context.Background(), &ctrlpb.CreateSubscriptionRequest{
 		Subscription: &ctrlpb.SubscriptionRequest{},
 	})
@@ -53,7 +53,7 @@ func (s *subscription) Create() error {
 	return nil
 }
 
-func (s *subscription) Delete() error {
+func (s *subscription) Delete(ctx context.Context) error {
 	id, err := NewIDFromString(s.id)
 	if err != nil {
 		return err
@@ -80,7 +80,7 @@ func (s *subscription) Delete() error {
 // 	return nil
 // }
 
-func (s *subscription) Pause() error {
+func (s *subscription) Pause(ctx context.Context) error {
 	id, err := NewIDFromString(s.id)
 	if err != nil {
 		return err
@@ -94,7 +94,7 @@ func (s *subscription) Pause() error {
 	return nil
 }
 
-func (s *subscription) Resume() error {
+func (s *subscription) Resume(ctx context.Context) error {
 	id, err := NewIDFromString(s.id)
 	if err != nil {
 		return err

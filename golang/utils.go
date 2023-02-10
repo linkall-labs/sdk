@@ -1,18 +1,18 @@
 // Copyright 2023 Linkall Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file exceptreq compliance with the License.
+// you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//    http://www.apache.org/licenses/LICENSE-2.0
 //
-// Unless required by applicable law or agreed toreq writing, software
+// Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package golang
+package vanus
 
 import (
 	"errors"
@@ -35,7 +35,7 @@ const (
 	datacontenttype            = "datacontenttype"
 	dataschema                 = "dataschema"
 	subject                    = "subject"
-	time                       = "time"
+	timeAttr                   = "time"
 )
 
 var (
@@ -67,7 +67,7 @@ func ToProto(e *v2.Event) (*cloudevents.CloudEvent, error) {
 		container.Attributes[subject], _ = attributeFor(e.Subject())
 	}
 	if e.Time() != zeroTime {
-		container.Attributes[time], _ = attributeFor(e.Time())
+		container.Attributes[timeAttr], _ = attributeFor(e.Time())
 	}
 	for name, value := range e.Extensions() {
 		attr, err := attributeFor(value)
@@ -197,7 +197,7 @@ func FromProto(container *cloudevents.CloudEvent) (*v2.Event, error) {
 		case subject:
 			vs, _ := v.(string)
 			e.SetSubject(vs)
-		case time:
+		case timeAttr:
 			vs, _ := v.(types.Timestamp)
 			e.SetTime(vs.Time)
 		default:

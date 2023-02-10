@@ -17,8 +17,6 @@ github.com/json-iterator/go v1.1.10 h1:Kz6Cvnvv2wGdaG/V8yMvfkmNiXq9Ya2KUv4rouJJr
 github.com/json-iterator/go v1.1.10/go.mod h1:KdQUCv79m/52Kvf8AW2vK1V8akMuk1QjK/uOdHXbAo4=
 github.com/linkall-labs/vanus/observability v0.0.0-20230202030707-115734791dcf h1:iVTFYHvdv/qBxl3kbYxdzPr6kiRBaOtcSl7AvLvnbiQ=
 github.com/linkall-labs/vanus/observability v0.0.0-20230202030707-115734791dcf/go.mod h1:hpZlBWkV1JKxuoRRHzfD0/OsBEIhQm8ysVd2gKtV9Ek=
-github.com/linkall-labs/vanus/proto v0.0.0-20230105121006-1395ee889925 h1:yUhEKfZiwQIfLuQXHSlZo8bXY523m8PrZux5q+rDOS8=
-github.com/linkall-labs/vanus/proto v0.0.0-20230105121006-1395ee889925/go.mod h1:QhoJhDCnwHIVTrkGXtaRyyGenuNt7a7tx8MLdUSCGok=
 github.com/linkall-labs/vanus/proto v0.5.8-0.20230202030707-115734791dcf h1:e0IrxF1q7ZtC5IdYtv/iWpQnAtNSHYb+23F9uHjRz/8=
 github.com/linkall-labs/vanus/proto v0.5.8-0.20230202030707-115734791dcf/go.mod h1:uorUJ3Q597Wj/1H1viO1Q0K+BGsTX/avImDmU7BfTeg=
 github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421 h1:ZqeYNhU3OHLH3mGKHDcjJRFFRrJa6eAM5H+CtDdOsPc=
