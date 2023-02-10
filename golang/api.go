@@ -12,30 +12,33 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package golang
+package vanus
 
 import (
 	"context"
+	"io"
 
 	v2 "github.com/cloudevents/sdk-go/v2"
 	metapb "github.com/linkall-labs/vanus/proto/pkg/meta"
 )
 
 type Client interface {
-	Publisher(opts *PublishOptions) Publisher
-	Subscriber(opts *SubscribeOptions) (Subscriber, error)
+	Publisher(opts ...PublishOption) Publisher
+	Subscriber(opts ...SubscribeOption) Subscriber
 	Controller() Controller
 	Disconnect() error
 }
 
 type Publisher interface {
+	io.Closer
 	Eventbus() string
 	Publish(ctx context.Context, events ...*v2.Event) error
 }
 
 type Subscriber interface {
+	io.Closer
 	SubscriptionID() string
-	Subscribe(ctx context.Context) (<-chan Message, error)
+	Listen(handler func(ctx context.Context, msgs ...Message) error) error
 }
 
 type Message interface {
@@ -44,31 +47,23 @@ type Message interface {
 	Failed(err error) error
 }
 
-type PublishOptions struct {
-	Eventbus string
-}
-
-type SubscribeOptions struct {
-	SubscriptionID string
-}
-
 type Controller interface {
 	Eventbus(name string) Eventbus
 	Subscription(id string) Subscription
 }
 
 type Eventbus interface {
-	List() ([]*metapb.EventBus, error)
-	Get() (*metapb.EventBus, error)
-	Create() error
-	Delete() error
+	List(ctx context.Context) ([]*metapb.EventBus, error)
+	Get(ctx context.Context) (*metapb.EventBus, error)
+	Create(ctx context.Context) error
+	Delete(ctx context.Context) error
 }
 
 type Subscription interface {
-	List() ([]*metapb.Subscription, error)
-	Get() (*metapb.Subscription, error)
-	Create() error
-	Delete() error
-	Pause() error
-	Resume() error
+	List(ctx context.Context) ([]*metapb.Subscription, error)
+	Get(ctx context.Context) (*metapb.Subscription, error)
+	Create(ctx context.Context) error
+	Delete(ctx context.Context) error
+	Pause(ctx context.Context) error
+	Resume(ctx context.Context) error
 }

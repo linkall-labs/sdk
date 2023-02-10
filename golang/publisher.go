@@ -1,75 +1,66 @@
 // Copyright 2023 Linkall Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file exceptreq compliance with the License.
+// you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//    http://www.apache.org/licenses/LICENSE-2.0
 //
-// Unless required by applicable law or agreed toreq writing, software
+// Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package golang
+package vanus
 
 import (
 	"context"
+	"google.golang.org/grpc"
 
 	v2 "github.com/cloudevents/sdk-go/v2"
 	"github.com/linkall-labs/vanus/proto/pkg/cloudevents"
 	proxypb "github.com/linkall-labs/vanus/proto/pkg/proxy"
 )
 
-type publish struct {
+type publisher struct {
 	store   proxypb.StoreProxyClient
-	options *PublishOptions
+	options *publishOptions
 }
 
-func (p *publish) Eventbus() string {
-	return p.options.Eventbus
+func newPublisher(cc *grpc.ClientConn, opts *publishOptions) Publisher {
+	return &publisher{
+		store:   proxypb.NewStoreProxyClient(cc),
+		options: opts,
+	}
 }
 
-func (p *publish) Publish(ctx context.Context, events ...*v2.Event) error {
-	eventpb, err := ToProto(events[0])
-	if err != nil {
-		return err
-	}
-	in := &proxypb.PublishRequest{
-		EventbusName: p.options.Eventbus,
-		Events: &cloudevents.CloudEventBatch{
-			Events: []*cloudevents.CloudEvent{eventpb},
-		},
-	}
-	_, err = p.store.Publish(context.Background(), in)
-	if err != nil {
-		return err
-	}
+func (p *publisher) Close() error {
+	// nothing to do
 	return nil
 }
 
-func (c *client) Publisher(opts *PublishOptions) Publisher {
-	c.pubMu.RLock()
-	value, ok := c.publisherCache.Load(opts.Eventbus)
-	if ok {
-		defer c.pubMu.RUnlock()
-		return value.(*publish)
-	}
-	c.pubMu.RUnlock()
+func (p *publisher) Eventbus() string {
+	return p.options.eventbus
+}
 
-	c.pubMu.Lock()
-	defer c.pubMu.Unlock()
-
-	value, ok = c.publisherCache.Load(opts.Eventbus)
-	if ok {
-		return value.(*publish)
+func (p *publisher) Publish(ctx context.Context, events ...*v2.Event) error {
+	pbs := make([]*cloudevents.CloudEvent, 0, len(events))
+	for idx := range events {
+		pb, err := ToProto(events[idx])
+		if err != nil {
+			return err
+		}
+		pbs = append(pbs, pb)
 	}
 
-	publisher := &publish{
-		store:   c.store,
-		options: opts,
+	in := &proxypb.PublishRequest{
+		EventbusName: p.options.eventbus,
+		Events: &cloudevents.CloudEventBatch{
+			Events: pbs,
+		},
 	}
-	c.publisherCache.Store(opts.Eventbus, publisher)
-	return publisher
+
+	_, err := p.store.Publish(ctx, in)
+	return err
 }
