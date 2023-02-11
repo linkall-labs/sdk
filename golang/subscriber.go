@@ -16,6 +16,11 @@ package vanus
 
 import (
 	"context"
+	"fmt"
+	"github.com/linkall-labs/vanus/proto/pkg/cloudevents"
+	"go.uber.org/atomic"
+	"google.golang.org/protobuf/types/known/emptypb"
+	"net"
 	"sync"
 
 	v2 "github.com/cloudevents/sdk-go/v2"
@@ -23,11 +28,12 @@ import (
 	"google.golang.org/grpc"
 )
 
-type ackCallback func(result bool) error
+type ackCallback func(err error)
 
 type message struct {
-	event *v2.Event
-	ack   ackCallback
+	event   *v2.Event
+	ack     ackCallback
+	ackFlag atomic.Bool
 }
 
 func newMessage(cb ackCallback, e *v2.Event) Message {
@@ -41,12 +47,16 @@ func (m *message) GetEvent() *v2.Event {
 	return m.event
 }
 
-func (m *message) Success() error {
-	return m.ack(true)
+func (m *message) Success() {
+	if m.ackFlag.CAS(false, true) {
+		m.ack(nil)
+	}
 }
 
-func (m *message) Failed(err error) error {
-	return m.ack(false)
+func (m *message) Failed(err error) {
+	if m.ackFlag.CAS(false, true) {
+		m.ack(err)
+	}
 }
 
 type subscribe struct {
@@ -63,50 +73,39 @@ type subscribe struct {
 }
 
 func (s *subscribe) Listen(handler func(ctx context.Context, msgs ...Message) error) error {
-	in := &proxypb.SubscribeRequest{
-		SubscriptionId: s.SubscriptionID(),
-	}
-	var err error
-	ctx := context.Background()
-	s.subscribeStream, err = s.store.Subscribe(ctx, in)
-	if err != nil {
-		_ = s.Close()
-		return err
-	}
-	s.ackStream, err = s.store.Ack(ctx)
-	if err != nil {
-		_ = s.Close()
-		return err
-	}
 	s.handler = handler
-	go s.startReceive()
-	barrier := make(chan struct{}, s.options.parallelism)
-	for idx := 0; idx < s.options.parallelism; idx++ {
-		barrier <- struct{}{}
-	}
-	for {
-		select {
-		case <-s.closeC:
-			// TODO log
-			goto CLOSE
-		case msg := <-s.messageC:
-			<-barrier
-			l := len(s.messageC)
-			var msgs []Message
-			msgs = append(msgs, msg)
-			for idx := 0; idx < l && idx < s.options.batchSize; idx++ {
-				msgs = append(msgs, <-s.messageC)
-			}
-			go func() {
-				// TODO(wenfeng) How to process error?
-				_ = s.handler(context.Background(), msgs...)
-				barrier <- struct{}{}
-			}()
+	go func() {
+		barrier := make(chan struct{}, s.options.parallelism)
+		for idx := 0; idx < s.options.parallelism; idx++ {
+			barrier <- struct{}{}
 		}
-	}
-CLOSE:
-	close(barrier)
-	return nil
+		for {
+			select {
+			case <-s.closeC:
+				// TODO log
+				goto CLOSE
+			case msg := <-s.messageC:
+				if msg == nil {
+					goto CLOSE // TODO(wenfeng) how to process if msg is nil?
+				}
+				<-barrier
+				l := len(s.messageC)
+				var msgs []Message
+				msgs = append(msgs, msg)
+				for idx := 0; idx < l && idx < s.options.batchSize; idx++ {
+					msgs = append(msgs, <-s.messageC)
+				}
+				go func() {
+					// TODO(wenfeng) How to process error?
+					_ = s.handler(context.Background(), msgs...)
+					barrier <- struct{}{}
+				}()
+			}
+		}
+	CLOSE:
+		close(barrier)
+	}()
+	return s.startReceive()
 }
 
 func (s *subscribe) Close() error {
@@ -122,53 +121,106 @@ func (s *subscribe) Close() error {
 	return nil
 }
 
-func newSubscriber(cc *grpc.ClientConn, opts *subscribeOptions) (Subscriber, error) {
-	ch := make(chan Message, 32)
+func newSubscriber(cc *grpc.ClientConn, opts *subscribeOptions) Subscriber {
 	return &subscribe{
 		store:    proxypb.NewStoreProxyClient(cc),
 		options:  opts,
-		messageC: ch,
+		messageC: make(chan Message, 32),
 		closeC:   make(chan struct{}),
 		state:    stateInitialized,
-	}, nil
+	}
 }
 
 func (s *subscribe) SubscriptionID() string {
 	return s.options.subscriptionID
 }
 
-func (s *subscribe) startReceive() {
-	for {
-		resp, err := s.subscribeStream.Recv()
-		if err != nil {
-			_ = s.Close() // TODO(wenfeng) how to process error?
-			break
-		}
+func (s *subscribe) Send(ctx context.Context, event *cloudevents.BatchEvent) (*emptypb.Empty, error) {
+	ch := make(chan error, 1)
+	s.processCloudEvents(event.Events, func(err error) {
+		ch <- err
+	})
+	err := <-ch
+	if err != nil {
+		return nil, err
+	}
+	return &emptypb.Empty{}, nil
+}
 
-		ackFunc := func(result bool) error {
-			req := &proxypb.AckRequest{
-				SequenceId:     resp.SequenceId,
-				SubscriptionId: s.options.subscriptionID,
-				Success:        result,
-			}
-			err = s.ackStream.Send(req)
-			if err != nil {
-				_ = s.Close()
-				return err
-			}
-			return nil
+func (s *subscribe) startReceive() error {
+	if !s.options.activeMode {
+		srv := grpc.NewServer()
+		cloudevents.RegisterCloudEventsServer(srv, s)
+		listen, err := net.Listen("tcp", fmt.Sprintf(":%d", s.options.port))
+		if err != nil {
+			return err
 		}
-		if batch := resp.GetEvents(); batch != nil {
-			if eventpbs := batch.GetEvents(); len(eventpbs) > 0 {
-				for _, eventpb := range eventpbs {
-					event, err2 := FromProto(eventpb)
-					if err2 != nil {
-						// TODO(jiangkai): check err
-						continue
+		return srv.Serve(listen)
+	} else {
+		ctx := context.Background()
+		var err error
+		in := &proxypb.SubscribeRequest{
+			SubscriptionId: s.SubscriptionID(),
+		}
+		s.subscribeStream, err = s.store.Subscribe(ctx, in)
+		if err != nil {
+			_ = s.Close()
+			return err
+		}
+		s.ackStream, err = s.store.Ack(ctx)
+		if err != nil {
+			_ = s.Close()
+			return err
+		}
+		for {
+			select {
+			case <-s.closeC:
+			default:
+				resp, err := s.subscribeStream.Recv()
+				if err != nil {
+					return s.Close()
+				}
+
+				ackFunc := func(err error) {
+					req := &proxypb.AckRequest{
+						SequenceId:     resp.SequenceId,
+						SubscriptionId: s.options.subscriptionID,
+						Success:        err == nil,
 					}
-					s.messageC <- newMessage(ackFunc, event)
+					_err := s.ackStream.Send(req)
+					if _err != nil {
+						_ = s.Close()
+					}
+				}
+				if batch := resp.GetEvents(); batch != nil {
+					s.processCloudEvents(batch, ackFunc)
+				} else {
+					ackFunc(nil)
 				}
 			}
+		}
+	}
+}
+
+func (s *subscribe) processCloudEvents(batch *cloudevents.CloudEventBatch, cb ackCallback) {
+	size := atomic.NewInt32(int32(len(batch.GetEvents())))
+	_ackFunc := func(err error) {
+		if err == nil {
+			if size.Dec() == 0 {
+				cb(nil)
+			}
+		} else {
+			cb(err)
+		}
+	}
+	if events := batch.GetEvents(); len(events) > 0 {
+		for _, e := range events {
+			event, err2 := FromProto(e)
+			if err2 != nil {
+				// TODO(JiangKai): check err
+				continue
+			}
+			s.messageC <- newMessage(_ackFunc, event)
 		}
 	}
 }
