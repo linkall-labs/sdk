@@ -85,11 +85,6 @@ func (c *client) Publisher(opts ...PublishOption) Publisher {
 		return value.(Publisher)
 	}
 
-	value, ok = c.publisherCache.Load(defaultOpts.eventbus)
-	if ok {
-		return value.(Publisher)
-	}
-
 	// TODO(wenfeng) use connection pool
 	publisher := newPublisher(c.conn, defaultOpts)
 	value, _ = c.publisherCache.LoadOrStore(defaultOpts.eventbus, publisher)

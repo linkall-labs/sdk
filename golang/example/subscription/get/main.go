@@ -15,6 +15,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 
 	client "github.com/linkall-labs/sdk/golang"
@@ -29,7 +30,7 @@ func main() {
 		panic("connect error")
 	}
 
-	res, err := c.Controller().Subscription("0000004B5B000010").Get()
+	res, err := c.Controller().Subscription("0000004B5B000010").Get(context.Background())
 	if err != nil {
 		panic("get subscription error")
 	}
