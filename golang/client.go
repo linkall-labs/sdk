@@ -107,10 +107,7 @@ func (c *client) Subscriber(opts ...SubscribeOption) Subscriber {
 		return value.(Subscriber)
 	}
 
-	subscribe, err := newSubscriber(c, defaultOptions)
-	if err != nil {
-		return nil
-	}
+	subscribe := newSubscriber(c.conn, defaultOptions)
 
 	value, _ = c.subscriberCache.LoadOrStore(defaultOptions.subscriptionID, subscribe)
 	return value.(Subscriber)

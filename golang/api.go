@@ -43,8 +43,8 @@ type Subscriber interface {
 
 type Message interface {
 	GetEvent() *v2.Event
-	Success() error
-	Failed(err error) error
+	Success()
+	Failed(err error)
 }
 
 type Controller interface {
