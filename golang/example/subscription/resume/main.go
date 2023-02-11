@@ -15,6 +15,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 
 	client "github.com/linkall-labs/sdk/golang"
@@ -29,7 +30,7 @@ func main() {
 		panic("connect error")
 	}
 
-	err = c.Controller().Subscription("0000002689000012").Resume()
+	err = c.Controller().Subscription("0000002689000012").Resume(context.Background())
 	if err != nil {
 		fmt.Printf("resume subscription failed, err: %s\n", err.Error())
 		return

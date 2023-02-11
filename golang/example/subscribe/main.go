@@ -47,7 +47,7 @@ func main() {
 	err = s.Listen(func(ctx context.Context, msgs ...vanus.Message) error {
 		for _, msg := range msgs {
 			fmt.Printf("received a message, event: %s\n", msg.GetEvent().String())
-			_ = msg.Success()
+			msg.Success()
 		}
 		return nil
 	})
