@@ -19,6 +19,7 @@ import (
 	"io"
 
 	v2 "github.com/cloudevents/sdk-go/v2"
+	ctrlpb "github.com/linkall-labs/vanus/proto/pkg/controller"
 	metapb "github.com/linkall-labs/vanus/proto/pkg/meta"
 )
 
@@ -50,19 +51,19 @@ type Message interface {
 type Controller interface {
 	Eventbus(name string) Eventbus
 	Subscription(id string) Subscription
+	CreateEventbus(ctx context.Context, req *ctrlpb.CreateEventBusRequest) error
+	CreateSubscription(ctx context.Context, req *ctrlpb.SubscriptionRequest) (*metapb.Subscription, error)
 }
 
 type Eventbus interface {
 	List(ctx context.Context) ([]*metapb.EventBus, error)
 	Get(ctx context.Context) (*metapb.EventBus, error)
-	Create(ctx context.Context) error
 	Delete(ctx context.Context) error
 }
 
 type Subscription interface {
 	List(ctx context.Context) ([]*metapb.Subscription, error)
 	Get(ctx context.Context) (*metapb.Subscription, error)
-	Create(ctx context.Context) error
 	Delete(ctx context.Context) error
 	Pause(ctx context.Context) error
 	Resume(ctx context.Context) error

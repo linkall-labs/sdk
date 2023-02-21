@@ -15,6 +15,9 @@
 package vanus
 
 import (
+	"context"
+	ctrlpb "github.com/linkall-labs/vanus/proto/pkg/controller"
+	metapb "github.com/linkall-labs/vanus/proto/pkg/meta"
 	"sync"
 
 	proxypb "github.com/linkall-labs/vanus/proto/pkg/proxy"
@@ -90,4 +93,15 @@ func (c *controller) Subscription(id string) Subscription {
 	}
 	c.sCache.Store(id, s)
 	return s
+}
+
+func (c *controller) CreateEventbus(ctx context.Context, req *ctrlpb.CreateEventBusRequest) error {
+	_, err := c.controller.CreateEventBus(ctx, req)
+	return err
+}
+
+func (c *controller) CreateSubscription(ctx context.Context,
+	s *ctrlpb.SubscriptionRequest) (*metapb.Subscription, error) {
+	return c.controller.CreateSubscription(ctx, &ctrlpb.CreateSubscriptionRequest{
+		Subscription: s})
 }

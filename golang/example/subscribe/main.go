@@ -19,8 +19,6 @@ import (
 	"fmt"
 	"io"
 	"time"
-
-	"github.com/linkall-labs/sdk/golang"
 )
 
 func main() {
