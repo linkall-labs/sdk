@@ -54,8 +54,8 @@ type Controller interface {
 }
 
 type Eventbus interface {
-	List(ctx context.Context) ([]*metapb.EventBus, error)
-	Get(ctx context.Context) (*metapb.EventBus, error)
+	List(ctx context.Context) ([]*metapb.Eventbus, error)
+	Get(ctx context.Context) (*metapb.Eventbus, error)
 	Create(ctx context.Context) error
 	Delete(ctx context.Context) error
 }

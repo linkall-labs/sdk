@@ -29,20 +29,20 @@ type eventbus struct {
 	controller proxypb.ControllerProxyClient
 }
 
-func (eb *eventbus) List(ctx context.Context) ([]*metapb.EventBus, error) {
-	res, err := eb.controller.ListEventBus(context.Background(), &emptypb.Empty{})
+func (eb *eventbus) List(ctx context.Context) ([]*metapb.Eventbus, error) {
+	res, err := eb.controller.ListEventbus(context.Background(), &emptypb.Empty{})
 	if err != nil {
 		return nil, err
 	}
 	return res.GetEventbus(), nil
 }
 
-func (eb *eventbus) Get(ctx context.Context) (*metapb.EventBus, error) {
-	return eb.controller.GetEventBus(context.Background(), &metapb.EventBus{Name: eb.name})
+func (eb *eventbus) Get(ctx context.Context) (*metapb.Eventbus, error) {
+	return eb.controller.GetEventbus(context.Background(), &metapb.Eventbus{Name: eb.name})
 }
 
 func (eb *eventbus) Create(ctx context.Context) error {
-	_, err := eb.controller.CreateEventBus(context.Background(), &ctrlpb.CreateEventBusRequest{
+	_, err := eb.controller.CreateEventbus(context.Background(), &ctrlpb.CreateEventbusRequest{
 		Name:      eb.name,
 		LogNumber: 1,
 	})
@@ -53,7 +53,7 @@ func (eb *eventbus) Create(ctx context.Context) error {
 }
 
 func (eb *eventbus) Delete(ctx context.Context) error {
-	_, err := eb.controller.DeleteEventBus(context.Background(), &metapb.EventBus{Name: eb.name})
+	_, err := eb.controller.DeleteEventbus(context.Background(), &metapb.Eventbus{Name: eb.name})
 	if err != nil {
 		return err
 	}
