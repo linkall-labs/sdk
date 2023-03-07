@@ -18,9 +18,10 @@ import (
 	"errors"
 	"sync"
 
-	proxypb "github.com/linkall-labs/vanus/proto/pkg/proxy"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+
+	proxypb "github.com/vanus-labs/vanus/proto/pkg/proxy"
 )
 
 type ClientOptions struct {
@@ -47,7 +48,7 @@ type client struct {
 
 func Connect(options *ClientOptions) (Client, error) {
 	if options.Endpoint == "" {
-		//log.Error(context.Background(), "endpoint is required for client", nil)
+		// log.Error(context.Background(), "endpoint is required for client", nil)
 		return nil, errors.New("endpoint is required for client")
 	}
 	var opts []grpc.DialOption

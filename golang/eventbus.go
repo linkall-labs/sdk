@@ -17,10 +17,11 @@ package vanus
 import (
 	"context"
 
-	"github.com/golang/protobuf/ptypes/empty"
-	ctrlpb "github.com/linkall-labs/vanus/proto/pkg/controller"
-	metapb "github.com/linkall-labs/vanus/proto/pkg/meta"
-	proxypb "github.com/linkall-labs/vanus/proto/pkg/proxy"
+	"google.golang.org/protobuf/types/known/emptypb"
+
+	ctrlpb "github.com/vanus-labs/vanus/proto/pkg/controller"
+	metapb "github.com/vanus-labs/vanus/proto/pkg/meta"
+	proxypb "github.com/vanus-labs/vanus/proto/pkg/proxy"
 )
 
 type eventbus struct {
@@ -29,7 +30,7 @@ type eventbus struct {
 }
 
 func (eb *eventbus) List(ctx context.Context) ([]*metapb.EventBus, error) {
-	res, err := eb.controller.ListEventBus(context.Background(), &empty.Empty{})
+	res, err := eb.controller.ListEventBus(context.Background(), &emptypb.Empty{})
 	if err != nil {
 		return nil, err
 	}
