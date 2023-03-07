@@ -17,7 +17,7 @@ package vanus
 import (
 	"sync"
 
-	proxypb "github.com/linkall-labs/vanus/proto/pkg/proxy"
+	proxypb "github.com/vanus-labs/vanus/proto/pkg/proxy"
 )
 
 type controller struct {

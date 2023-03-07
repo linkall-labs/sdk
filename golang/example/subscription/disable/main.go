@@ -18,7 +18,7 @@ import (
 	"context"
 	"fmt"
 
-	client "github.com/linkall-labs/sdk/golang"
+	client "github.com/vanus-labs/sdk/golang"
 )
 
 func main() {

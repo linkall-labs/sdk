@@ -17,15 +17,16 @@ package vanus
 import (
 	"context"
 	"fmt"
-	"github.com/linkall-labs/vanus/proto/pkg/cloudevents"
-	"go.uber.org/atomic"
-	"google.golang.org/protobuf/types/known/emptypb"
 	"net"
 	"sync"
 
 	v2 "github.com/cloudevents/sdk-go/v2"
-	proxypb "github.com/linkall-labs/vanus/proto/pkg/proxy"
+	"go.uber.org/atomic"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/emptypb"
+
+	"github.com/vanus-labs/vanus/proto/pkg/cloudevents"
+	proxypb "github.com/vanus-labs/vanus/proto/pkg/proxy"
 )
 
 type ackCallback func(err error)

@@ -20,7 +20,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/linkall-labs/sdk/golang"
+	vanus "github.com/vanus-labs/sdk/golang"
 )
 
 func main() {

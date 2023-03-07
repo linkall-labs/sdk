@@ -19,7 +19,8 @@ import (
 	"io"
 
 	v2 "github.com/cloudevents/sdk-go/v2"
-	metapb "github.com/linkall-labs/vanus/proto/pkg/meta"
+
+	metapb "github.com/vanus-labs/vanus/proto/pkg/meta"
 )
 
 type Client interface {

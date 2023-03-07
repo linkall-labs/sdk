@@ -16,11 +16,12 @@ package vanus
 
 import (
 	"context"
-	"google.golang.org/grpc"
 
 	v2 "github.com/cloudevents/sdk-go/v2"
-	"github.com/linkall-labs/vanus/proto/pkg/cloudevents"
-	proxypb "github.com/linkall-labs/vanus/proto/pkg/proxy"
+	"google.golang.org/grpc"
+
+	"github.com/vanus-labs/vanus/proto/pkg/cloudevents"
+	proxypb "github.com/vanus-labs/vanus/proto/pkg/proxy"
 )
 
 type publisher struct {

@@ -17,9 +17,9 @@ package vanus
 import (
 	"context"
 
-	ctrlpb "github.com/linkall-labs/vanus/proto/pkg/controller"
-	metapb "github.com/linkall-labs/vanus/proto/pkg/meta"
-	proxypb "github.com/linkall-labs/vanus/proto/pkg/proxy"
+	ctrlpb "github.com/vanus-labs/vanus/proto/pkg/controller"
+	metapb "github.com/vanus-labs/vanus/proto/pkg/meta"
+	proxypb "github.com/vanus-labs/vanus/proto/pkg/proxy"
 )
 
 type subscription struct {
@@ -58,7 +58,9 @@ func (s *subscription) Delete(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	_, err = s.controller.DeleteSubscription(context.Background(), &ctrlpb.DeleteSubscriptionRequest{Id: id})
+	_, err = s.controller.DeleteSubscription(context.Background(), &ctrlpb.DeleteSubscriptionRequest{
+		Id: id,
+	})
 	if err != nil {
 		return err
 	}

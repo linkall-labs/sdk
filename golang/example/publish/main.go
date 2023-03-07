@@ -20,7 +20,8 @@ import (
 
 	v2 "github.com/cloudevents/sdk-go/v2"
 	"github.com/google/uuid"
-	"github.com/linkall-labs/sdk/golang"
+
+	vanus "github.com/vanus-labs/sdk/golang"
 )
 
 func main() {
