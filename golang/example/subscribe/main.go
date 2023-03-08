@@ -34,7 +34,7 @@ func main() {
 	}
 
 	s := c.Subscriber(
-		vanus.WithSubscriptionID("your_subscription_id"),
+		vanus.WithSubscriptionID(vanus.NewID(1234)),
 		vanus.WithListenPort(18080),
 		vanus.WithProtocol(vanus.ProtocolGRPC),
 		vanus.WithParallelism(8),

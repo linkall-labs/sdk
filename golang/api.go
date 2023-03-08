@@ -17,6 +17,7 @@ package vanus
 import (
 	"context"
 	"io"
+	"strconv"
 
 	v2 "github.com/cloudevents/sdk-go/v2"
 
@@ -24,8 +25,8 @@ import (
 )
 
 type Client interface {
-	Publisher(opts ...PublishOption) Publisher
-	Subscriber(opts ...SubscribeOption) Subscriber
+	Publisher(opts ...EventbusOption) Publisher
+	Subscriber(opts ...SubscriptionOption) Subscriber
 	Controller() Controller
 	Disconnect() error
 }
@@ -49,8 +50,8 @@ type Message interface {
 }
 
 type Controller interface {
-	Eventbus(name string) Eventbus
-	Subscription(id string) Subscription
+	Eventbus(opts ...EventbusOption) Eventbus
+	Subscription(opts ...SubscriptionOption) Subscription
 }
 
 type Eventbus interface {
@@ -67,4 +68,15 @@ type Subscription interface {
 	Delete(ctx context.Context) error
 	Pause(ctx context.Context) error
 	Resume(ctx context.Context) error
+}
+
+type ID uint64
+
+func NewID(id uint64) ID {
+	return ID(id)
+}
+
+func NewIDFromHex(id string) (ID, error) {
+	i, err := strconv.ParseInt(id, 16, 64)
+	return ID(i), err
 }

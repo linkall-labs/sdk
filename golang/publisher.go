@@ -41,8 +41,12 @@ func (p *publisher) Close() error {
 	return nil
 }
 
+func (p *publisher) Namespace() string {
+	return p.options.namespace
+}
+
 func (p *publisher) Eventbus() string {
-	return p.options.eventbus
+	return p.options.eventbusName
 }
 
 func (p *publisher) Publish(ctx context.Context, events ...*v2.Event) error {
@@ -56,7 +60,7 @@ func (p *publisher) Publish(ctx context.Context, events ...*v2.Event) error {
 	}
 
 	in := &proxypb.PublishRequest{
-		EventbusName: p.options.eventbus,
+		EventbusId: p.options.eventbusID,
 		Events: &cloudevents.CloudEventBatch{
 			Events: pbs,
 		},

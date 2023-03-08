@@ -16,8 +16,7 @@ package vanus
 
 import (
 	"context"
-
-	"google.golang.org/protobuf/types/known/emptypb"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 
 	ctrlpb "github.com/vanus-labs/vanus/proto/pkg/controller"
 	metapb "github.com/vanus-labs/vanus/proto/pkg/meta"
@@ -26,11 +25,12 @@ import (
 
 type eventbus struct {
 	name       string
+	id         uint64
 	controller proxypb.ControllerProxyClient
 }
 
 func (eb *eventbus) List(ctx context.Context) ([]*metapb.Eventbus, error) {
-	res, err := eb.controller.ListEventbus(context.Background(), &emptypb.Empty{})
+	res, err := eb.controller.ListEventbus(ctx, &ctrlpb.ListEventbusRequest{})
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +38,7 @@ func (eb *eventbus) List(ctx context.Context) ([]*metapb.Eventbus, error) {
 }
 
 func (eb *eventbus) Get(ctx context.Context) (*metapb.Eventbus, error) {
-	return eb.controller.GetEventbus(context.Background(), &metapb.Eventbus{Name: eb.name})
+	return eb.controller.GetEventbus(ctx, &wrapperspb.UInt64Value{Value: eb.id})
 }
 
 func (eb *eventbus) Create(ctx context.Context) error {
@@ -53,7 +53,7 @@ func (eb *eventbus) Create(ctx context.Context) error {
 }
 
 func (eb *eventbus) Delete(ctx context.Context) error {
-	_, err := eb.controller.DeleteEventbus(context.Background(), &metapb.Eventbus{Name: eb.name})
+	_, err := eb.controller.DeleteEventbus(context.Background(), &wrapperspb.UInt64Value{Value: eb.id})
 	if err != nil {
 		return err
 	}

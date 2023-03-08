@@ -75,24 +75,24 @@ func (c *client) Close() error {
 	return nil
 }
 
-func (c *client) Publisher(opts ...PublishOption) Publisher {
+func (c *client) Publisher(opts ...EventbusOption) Publisher {
 	defaultOpts := defaultPublishOptions()
 	for _, apply := range opts {
 		apply(defaultOpts)
 	}
 
-	value, ok := c.publisherCache.Load(defaultOpts.eventbus)
+	value, ok := c.publisherCache.Load(defaultOpts.eventbusID)
 	if ok {
 		return value.(Publisher)
 	}
 
 	// TODO(wenfeng) use connection pool
 	publisher := newPublisher(c.conn, defaultOpts)
-	value, _ = c.publisherCache.LoadOrStore(defaultOpts.eventbus, publisher)
+	value, _ = c.publisherCache.LoadOrStore(defaultOpts.eventbusID, publisher)
 	return value.(Publisher)
 }
 
-func (c *client) Subscriber(opts ...SubscribeOption) Subscriber {
+func (c *client) Subscriber(opts ...SubscriptionOption) Subscriber {
 	defaultOptions := defaultSubscribeOptions()
 	for _, apply := range opts {
 		apply(defaultOptions)
