@@ -34,7 +34,7 @@ func main() {
 		panic("failed to connect to Vanus cluster, error: " + err.Error())
 	}
 
-	p := c.Publisher(vanus.WithEventbus("quick-start"))
+	p := c.Publisher(vanus.WithEventbus("default", "quick-start"))
 
 	event := v2.NewEvent()
 	event.SetID(uuid.New().String())

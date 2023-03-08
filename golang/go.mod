@@ -11,6 +11,10 @@ require (
 	google.golang.org/protobuf v1.28.1
 )
 
+replace (
+	github.com/vanus-labs/vanus/proto  => ../../vanus/proto
+)
+
 require (
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect

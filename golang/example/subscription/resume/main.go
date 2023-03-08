@@ -18,19 +18,24 @@ import (
 	"context"
 	"fmt"
 
-	client "github.com/vanus-labs/sdk/golang"
+	"github.com/vanus-labs/sdk/golang"
 )
 
 func main() {
-	opts := &client.ClientOptions{
+	opts := &vanus.ClientOptions{
 		Endpoint: "172.17.0.2:30001",
 	}
-	c, err := client.Connect(opts)
+	c, err := vanus.Connect(opts)
 	if err != nil {
 		panic("connect error")
 	}
 
-	err = c.Controller().Subscription("0000002689000012").Resume(context.Background())
+	id, err := vanus.NewIDFromHex("0000002689000012")
+	if err != nil {
+		panic("invalid id")
+	}
+
+	err = c.Controller().Subscription(vanus.WithSubscriptionID(id)).Resume(context.Background())
 	if err != nil {
 		fmt.Printf("resume subscription failed, err: %s\n", err.Error())
 		return

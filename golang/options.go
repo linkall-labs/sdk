@@ -28,7 +28,9 @@ const (
 )
 
 type publishOptions struct {
-	eventbus string
+	namespace    string
+	eventbusName string
+	eventbusID   uint64
 }
 
 func defaultPublishOptions() *publishOptions {
@@ -36,7 +38,7 @@ func defaultPublishOptions() *publishOptions {
 }
 
 type subscribeOptions struct {
-	subscriptionID         string
+	subscriptionID         ID
 	batchSize              int
 	port                   int
 	activeMode             bool
@@ -55,59 +57,66 @@ func defaultSubscribeOptions() *subscribeOptions {
 	}
 }
 
-type PublishOption func(opt *publishOptions)
+type EventbusOption func(opt *publishOptions)
 
-type SubscribeOption func(opt *subscribeOptions)
+type SubscriptionOption func(opt *subscribeOptions)
 
-func WithEventbus(eb string) PublishOption {
+func WithEventbus(namespace, name string) EventbusOption {
 	return func(opt *publishOptions) {
-		opt.eventbus = eb
+		opt.namespace = namespace
+		opt.eventbusName = name
 	}
 }
 
-func WithSubscriptionID(id string) SubscribeOption {
+func WithEventbusID(id uint64) EventbusOption {
+	return func(opt *publishOptions) {
+		opt.eventbusID = id
+	}
+}
+
+func WithSubscriptionID(id ID) SubscriptionOption {
 	return func(opt *subscribeOptions) {
 		opt.subscriptionID = id
 	}
 }
 
-func WithMaxBatchSize(size int) SubscribeOption {
+func WithMaxBatchSize(size int) SubscriptionOption {
 	return func(opt *subscribeOptions) {
 		opt.batchSize = size
 	}
 }
 
-func WithActiveMode(is bool) SubscribeOption {
+func WithActiveMode(is bool) SubscriptionOption {
 	return func(opt *subscribeOptions) {
 		opt.activeMode = true
 	}
 }
 
-func WithListenPort(port int) SubscribeOption {
+func WithListenPort(port int) SubscriptionOption {
 	return func(opt *subscribeOptions) {
 		opt.port = port
 	}
 }
 
-func WithProtocol(p Protocol) SubscribeOption {
+func WithProtocol(p Protocol) SubscriptionOption {
 	return func(opt *subscribeOptions) {
 		opt.protocol = p
 	}
 }
 
-func WithOrder(is bool) SubscribeOption {
+func WithOrder(is bool) SubscriptionOption {
 	return func(opt *subscribeOptions) {
 		opt.order = is
 	}
 }
 
-func WithParallelism(n int) SubscribeOption {
+func WithParallelism(n int) SubscriptionOption {
 	return func(opt *subscribeOptions) {
 		opt.parallelism = n
 	}
 }
 
-func WithConsumeTimeout(t time.Duration) SubscribeOption {
+func WithConsumeTimeout(t time.Duration) SubscriptionOption {
 	return func(opt *subscribeOptions) {
 		opt.consumeTimeoutPerBatch = t
 	}
