@@ -17,6 +17,7 @@ package vanus
 import (
 	"context"
 	"google.golang.org/protobuf/types/known/wrapperspb"
+	"sync"
 
 	ctrlpb "github.com/vanus-labs/vanus/proto/pkg/controller"
 	metapb "github.com/vanus-labs/vanus/proto/pkg/meta"
@@ -25,8 +26,10 @@ import (
 
 type eventbus struct {
 	name       string
-	id         uint64
 	controller proxypb.ControllerProxyClient
+	meta       *metapb.Eventbus
+	opt        *publishOptions
+	mutex      sync.Mutex
 }
 
 func (eb *eventbus) List(ctx context.Context) ([]*metapb.Eventbus, error) {
@@ -38,24 +41,100 @@ func (eb *eventbus) List(ctx context.Context) ([]*metapb.Eventbus, error) {
 }
 
 func (eb *eventbus) Get(ctx context.Context) (*metapb.Eventbus, error) {
-	return eb.controller.GetEventbus(ctx, &wrapperspb.UInt64Value{Value: eb.id})
+	return eb.get(ctx)
 }
 
 func (eb *eventbus) Create(ctx context.Context) error {
-	_, err := eb.controller.CreateEventbus(context.Background(), &ctrlpb.CreateEventbusRequest{
-		Name:      eb.name,
-		LogNumber: 1,
+	if eb.opt.namespace == "" || eb.opt.eventbusName == "" {
+		return ErrInvalidArguments
+	}
+
+	meta, err := eb.get(ctx)
+	if err != nil && err != ErrEventbusNotFound {
+		return err
+	}
+
+	if meta != nil {
+		return ErrEventbusExist
+	}
+
+	if err != nil && (err != ErrEventbusIsZero || err != ErrEventbusNotFound) {
+		return err
+	}
+
+	ns, err := eb.controller.GetNamespaceWithHumanFriendly(ctx, wrapperspb.String(eb.opt.namespace))
+	if ns != nil {
+		return err
+	}
+
+	resp, err := eb.controller.CreateEventbus(ctx, &ctrlpb.CreateEventbusRequest{
+		Name:        eb.name,
+		NamespaceId: ns.Id,
+		LogNumber:   1,
 	})
 	if err != nil {
 		return err
 	}
+	eb.mutex.Lock()
+	if eb.meta != nil {
+		eb.meta = resp
+	}
+	eb.mutex.Unlock()
 	return nil
 }
 
 func (eb *eventbus) Delete(ctx context.Context) error {
-	_, err := eb.controller.DeleteEventbus(context.Background(), &wrapperspb.UInt64Value{Value: eb.id})
+	pb, err := eb.get(ctx)
+
+	if err == ErrEventbusNotFound {
+		return nil
+	}
+
+	if err != nil {
+		return err
+	}
+
+	if pb == nil {
+		return nil
+	}
+
+	_, err = eb.controller.DeleteEventbus(ctx, &wrapperspb.UInt64Value{Value: eb.meta.Id})
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func (eb *eventbus) get(ctx context.Context) (*metapb.Eventbus, error) {
+	eb.mutex.Lock()
+	defer eb.mutex.Unlock()
+	if eb.meta != nil {
+		return eb.meta, nil
+	}
+	if eb.opt.eventbusID == 0 {
+		if eb.opt.namespace != "" && eb.opt.eventbusName != "" {
+			ns, err := eb.controller.GetNamespaceWithHumanFriendly(ctx, wrapperspb.String(eb.opt.namespace))
+			if err != nil {
+				return nil, ErrNamespaceNotFound
+			}
+			resp, err := eb.controller.GetEventbusWithHumanFriendly(ctx, &ctrlpb.GetEventbusWithHumanFriendlyRequest{
+				NamespaceId:  ns.Id,
+				EventbusName: eb.opt.eventbusName,
+			})
+			if err != nil {
+				// TODO judge resource not found
+				return nil, err
+			}
+			eb.meta = resp
+		} else {
+			return nil, ErrEventbusIsZero
+		}
+	} else {
+		resp, err := eb.controller.GetEventbus(ctx, wrapperspb.UInt64(eb.opt.eventbusID))
+		if err != nil {
+			return nil, err
+		}
+		eb.meta = resp
+	}
+	return eb.meta, nil
 }

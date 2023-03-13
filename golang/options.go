@@ -14,7 +14,10 @@
 
 package vanus
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 type Protocol int
 
@@ -27,15 +30,36 @@ const (
 	defaultParallelism  = 4
 )
 
+type EventbusOption func(opt *publishOptions)
+
 type publishOptions struct {
 	namespace    string
 	eventbusName string
 	eventbusID   uint64
 }
 
+func (o publishOptions) key() string {
+	return fmt.Sprintf("%s_%s_%d", o.namespace, o.eventbusName, o.eventbusID)
+}
+
 func defaultPublishOptions() *publishOptions {
 	return &publishOptions{}
 }
+
+func WithEventbus(namespace, name string) EventbusOption {
+	return func(opt *publishOptions) {
+		opt.namespace = namespace
+		opt.eventbusName = name
+	}
+}
+
+func WithEventbusID(id uint64) EventbusOption {
+	return func(opt *publishOptions) {
+		opt.eventbusID = id
+	}
+}
+
+type SubscriptionOption func(opt *subscribeOptions)
 
 type subscribeOptions struct {
 	subscriptionID         ID
@@ -48,29 +72,16 @@ type subscribeOptions struct {
 	consumeTimeoutPerBatch time.Duration
 }
 
+func (o subscribeOptions) key() string {
+	return fmt.Sprintf("%d", o.subscriptionID)
+}
+
 func defaultSubscribeOptions() *subscribeOptions {
 	return &subscribeOptions{
 		batchSize:   defaultMaxBatchSize,
 		port:        defaultListenPort,
 		protocol:    ProtocolGRPC,
 		parallelism: defaultParallelism,
-	}
-}
-
-type EventbusOption func(opt *publishOptions)
-
-type SubscriptionOption func(opt *subscribeOptions)
-
-func WithEventbus(namespace, name string) EventbusOption {
-	return func(opt *publishOptions) {
-		opt.namespace = namespace
-		opt.eventbusName = name
-	}
-}
-
-func WithEventbusID(id uint64) EventbusOption {
-	return func(opt *publishOptions) {
-		opt.eventbusID = id
 	}
 }
 

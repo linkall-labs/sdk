@@ -16,6 +16,7 @@ package vanus
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"strconv"
 
@@ -39,7 +40,7 @@ type Publisher interface {
 
 type Subscriber interface {
 	io.Closer
-	SubscriptionID() string
+	SubscriptionID() ID
 	Listen(handler func(ctx context.Context, msgs ...Message) error) error
 }
 
@@ -71,6 +72,10 @@ type Subscription interface {
 }
 
 type ID uint64
+
+func (id ID) Hex() string {
+	return fmt.Sprintf("%016X", id)
+}
 
 func NewID(id uint64) ID {
 	return ID(id)

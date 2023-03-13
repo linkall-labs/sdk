@@ -25,10 +25,12 @@ import (
 type subscription struct {
 	id         string
 	controller proxypb.ControllerProxyClient
+	meta       *metapb.Subscription
+	opt        *subscribeOptions
 }
 
 func (s *subscription) List(ctx context.Context) ([]*metapb.Subscription, error) {
-	res, err := s.controller.ListSubscription(context.Background(), &ctrlpb.ListSubscriptionRequest{})
+	res, err := s.controller.ListSubscription(ctx, &ctrlpb.ListSubscriptionRequest{})
 	if err != nil {
 		return nil, err
 	}
@@ -40,11 +42,11 @@ func (s *subscription) Get(ctx context.Context) (*metapb.Subscription, error) {
 	if err != nil {
 		return nil, err
 	}
-	return s.controller.GetSubscription(context.Background(), &ctrlpb.GetSubscriptionRequest{Id: id})
+	return s.controller.GetSubscription(ctx, &ctrlpb.GetSubscriptionRequest{Id: id})
 }
 
 func (s *subscription) Create(ctx context.Context) error {
-	_, err := s.controller.CreateSubscription(context.Background(), &ctrlpb.CreateSubscriptionRequest{
+	_, err := s.controller.CreateSubscription(ctx, &ctrlpb.CreateSubscriptionRequest{
 		Subscription: &ctrlpb.SubscriptionRequest{},
 	})
 	if err != nil {
@@ -58,7 +60,7 @@ func (s *subscription) Delete(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	_, err = s.controller.DeleteSubscription(context.Background(), &ctrlpb.DeleteSubscriptionRequest{
+	_, err = s.controller.DeleteSubscription(ctx, &ctrlpb.DeleteSubscriptionRequest{
 		Id: id,
 	})
 	if err != nil {
@@ -72,7 +74,7 @@ func (s *subscription) Delete(ctx context.Context) error {
 // 	if err != nil {
 // 		return err
 // 	}
-// 	_, err = s.controller.UpdateSubscription(context.Background(), &ctrlpb.UpdateSubscriptionRequest{
+// 	_, err = s.controller.UpdateSubscription(ctx, &ctrlpb.UpdateSubscriptionRequest{
 // 		Id:           id,
 // 		Subscription: &ctrlpb.SubscriptionRequest{},
 // 	})
@@ -87,7 +89,7 @@ func (s *subscription) Pause(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	_, err = s.controller.DisableSubscription(context.Background(), &ctrlpb.DisableSubscriptionRequest{
+	_, err = s.controller.DisableSubscription(ctx, &ctrlpb.DisableSubscriptionRequest{
 		Id: id,
 	})
 	if err != nil {
@@ -101,7 +103,7 @@ func (s *subscription) Resume(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	_, err = s.controller.ResumeSubscription(context.Background(), &ctrlpb.ResumeSubscriptionRequest{
+	_, err = s.controller.ResumeSubscription(ctx, &ctrlpb.ResumeSubscriptionRequest{
 		Id: id,
 	})
 	if err != nil {

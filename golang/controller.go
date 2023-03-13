@@ -42,36 +42,48 @@ func (c *client) Controller() Controller {
 	return ctrl
 }
 
-func (c *controller) Eventbus(name string) Eventbus {
+func (c *controller) Eventbus(opts ...EventbusOption) Eventbus {
 	c.emu.RLock()
-	value, ok := c.eCache.Load(name)
+	o := defaultPublishOptions()
+	for _, apply := range opts {
+		apply(o)
+	}
+
+	value, ok := c.eCache.Load(o.key())
 	if ok {
-		defer c.emu.RUnlock()
+		c.emu.RUnlock()
 		return value.(*eventbus)
 	}
 	c.emu.RUnlock()
 
 	c.emu.Lock()
 	defer c.emu.Unlock()
-
-	value, ok = c.eCache.Load(name)
+	// double check
+	value, ok = c.eCache.Load(o.key())
 	if ok {
 		return value.(*eventbus)
 	}
 
 	eb := &eventbus{
-		name:       name,
+		opt:        o,
 		controller: c.controller,
 	}
-	c.eCache.Store(name, eb)
+	c.eCache.Store(o.key(), eb)
 	return eb
 }
 
-func (c *controller) Subscription(id string) Subscription {
+func (c *controller) Subscription(opts ...SubscriptionOption) Subscription {
 	c.smu.RLock()
-	value, ok := c.sCache.Load(id)
+
+	o := defaultSubscribeOptions()
+
+	for _, apply := range opts {
+		apply(o)
+	}
+
+	value, ok := c.sCache.Load(o.key())
 	if ok {
-		defer c.smu.RUnlock()
+		c.smu.RUnlock()
 		return value.(*subscription)
 	}
 	c.smu.RUnlock()
@@ -79,15 +91,16 @@ func (c *controller) Subscription(id string) Subscription {
 	c.smu.Lock()
 	defer c.smu.Unlock()
 
-	value, ok = c.sCache.Load(id)
+	// double check
+	value, ok = c.sCache.Load(o.key())
 	if ok {
 		return value.(*subscription)
 	}
 
 	s := &subscription{
-		id:         id,
+		opt:        o,
 		controller: c.controller,
 	}
-	c.sCache.Store(id, s)
+	c.sCache.Store(o.subscriptionID, s)
 	return s
 }
