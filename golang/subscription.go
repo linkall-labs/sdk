@@ -22,44 +22,47 @@ import (
 	proxypb "github.com/vanus-labs/vanus/proto/pkg/proxy"
 )
 
+var (
+	_ Subscription = &subscription{}
+)
+
 type subscription struct {
-	id         string
 	controller proxypb.ControllerProxyClient
 }
 
 func (s *subscription) List(ctx context.Context) ([]*metapb.Subscription, error) {
-	res, err := s.controller.ListSubscription(context.Background(), &ctrlpb.ListSubscriptionRequest{})
+	res, err := s.controller.ListSubscription(ctx, &ctrlpb.ListSubscriptionRequest{})
 	if err != nil {
 		return nil, err
 	}
 	return res.GetSubscription(), nil
 }
 
-func (s *subscription) Get(ctx context.Context) (*metapb.Subscription, error) {
-	id, err := NewIDFromString(s.id)
-	if err != nil {
-		return nil, err
+func (s *subscription) Get(ctx context.Context, opts ...SubscriptionOption) (*metapb.Subscription, error) {
+
+	o := newSubscriptionOptions(opts...)
+
+	if o.subscriptionID == 0 {
+		return nil, ErrSubscriptionIDIsZero
 	}
-	return s.controller.GetSubscription(context.Background(), &ctrlpb.GetSubscriptionRequest{Id: id})
+
+	return s.controller.GetSubscription(ctx, &ctrlpb.GetSubscriptionRequest{Id: uint64(o.subscriptionID)})
 }
 
-func (s *subscription) Create(ctx context.Context) error {
-	_, err := s.controller.CreateSubscription(context.Background(), &ctrlpb.CreateSubscriptionRequest{
-		Subscription: &ctrlpb.SubscriptionRequest{},
+func (s *subscription) Create(ctx context.Context, request *ctrlpb.SubscriptionRequest) (*metapb.Subscription, error) {
+	return s.controller.CreateSubscription(ctx, &ctrlpb.CreateSubscriptionRequest{
+		Subscription: request,
 	})
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
-func (s *subscription) Delete(ctx context.Context) error {
-	id, err := NewIDFromString(s.id)
-	if err != nil {
-		return err
+func (s *subscription) Delete(ctx context.Context, opts ...SubscriptionOption) error {
+	o := newSubscriptionOptions(opts...)
+
+	if o.subscriptionID == 0 {
+		return ErrSubscriptionIDIsZero
 	}
-	_, err = s.controller.DeleteSubscription(context.Background(), &ctrlpb.DeleteSubscriptionRequest{
-		Id: id,
+	_, err := s.controller.DeleteSubscription(ctx, &ctrlpb.DeleteSubscriptionRequest{
+		Id: uint64(o.subscriptionID),
 	})
 	if err != nil {
 		return err
@@ -72,7 +75,7 @@ func (s *subscription) Delete(ctx context.Context) error {
 // 	if err != nil {
 // 		return err
 // 	}
-// 	_, err = s.controller.UpdateSubscription(context.Background(), &ctrlpb.UpdateSubscriptionRequest{
+// 	_, err = s.controller.UpdateSubscription(ctx, &ctrlpb.UpdateSubscriptionRequest{
 // 		Id:           id,
 // 		Subscription: &ctrlpb.SubscriptionRequest{},
 // 	})
@@ -82,13 +85,14 @@ func (s *subscription) Delete(ctx context.Context) error {
 // 	return nil
 // }
 
-func (s *subscription) Pause(ctx context.Context) error {
-	id, err := NewIDFromString(s.id)
-	if err != nil {
-		return err
+func (s *subscription) Pause(ctx context.Context, opts ...SubscriptionOption) error {
+	o := newSubscriptionOptions(opts...)
+
+	if o.subscriptionID == 0 {
+		return ErrSubscriptionIDIsZero
 	}
-	_, err = s.controller.DisableSubscription(context.Background(), &ctrlpb.DisableSubscriptionRequest{
-		Id: id,
+	_, err := s.controller.DisableSubscription(ctx, &ctrlpb.DisableSubscriptionRequest{
+		Id: uint64(o.subscriptionID),
 	})
 	if err != nil {
 		return err
@@ -96,13 +100,14 @@ func (s *subscription) Pause(ctx context.Context) error {
 	return nil
 }
 
-func (s *subscription) Resume(ctx context.Context) error {
-	id, err := NewIDFromString(s.id)
-	if err != nil {
-		return err
+func (s *subscription) Resume(ctx context.Context, opts ...SubscriptionOption) error {
+	o := newSubscriptionOptions(opts...)
+
+	if o.subscriptionID == 0 {
+		return ErrSubscriptionIDIsZero
 	}
-	_, err = s.controller.ResumeSubscription(context.Background(), &ctrlpb.ResumeSubscriptionRequest{
-		Id: id,
+	_, err := s.controller.ResumeSubscription(ctx, &ctrlpb.ResumeSubscriptionRequest{
+		Id: uint64(o.subscriptionID),
 	})
 	if err != nil {
 		return err

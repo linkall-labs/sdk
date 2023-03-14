@@ -35,7 +35,7 @@ func main() {
 		panic("invalid id")
 	}
 
-	err = c.Controller().Subscription(vanus.WithSubscriptionID(id)).Resume(context.Background())
+	err = c.Controller().Subscription().Resume(context.Background(), vanus.WithSubscriptionID(id))
 	if err != nil {
 		fmt.Printf("resume subscription failed, err: %s\n", err.Error())
 		return

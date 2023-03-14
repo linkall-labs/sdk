@@ -34,7 +34,7 @@ func main() {
 	if err != nil {
 		panic("invalid id")
 	}
-	err = c.Controller().Subscription(vanus.WithSubscriptionID(id)).Pause(context.Background())
+	err = c.Controller().Subscription().Pause(context.Background(), vanus.WithSubscriptionID(id))
 	if err != nil {
 		fmt.Printf("disable subscription failed, err: %s\n", err.Error())
 		return

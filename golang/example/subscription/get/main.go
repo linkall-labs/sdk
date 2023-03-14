@@ -34,7 +34,7 @@ func main() {
 	if err != nil {
 		panic("invalid id")
 	}
-	res, err := c.Controller().Subscription(vanus.WithSubscriptionID(id)).Get(context.Background())
+	res, err := c.Controller().Subscription().Get(context.Background(), vanus.WithSubscriptionID(id))
 	if err != nil {
 		panic("get subscription error")
 	}
