@@ -16,6 +16,8 @@ package vanus
 
 import (
 	"context"
+	"fmt"
+	ctrlpb "github.com/vanus-labs/vanus/proto/pkg/controller"
 	"io"
 	"strconv"
 
@@ -39,7 +41,7 @@ type Publisher interface {
 
 type Subscriber interface {
 	io.Closer
-	SubscriptionID() string
+	SubscriptionID() ID
 	Listen(handler func(ctx context.Context, msgs ...Message) error) error
 }
 
@@ -50,27 +52,31 @@ type Message interface {
 }
 
 type Controller interface {
-	Eventbus(opts ...EventbusOption) Eventbus
-	Subscription(opts ...SubscriptionOption) Subscription
+	Eventbus() Eventbus
+	Subscription() Subscription
 }
 
 type Eventbus interface {
 	List(ctx context.Context) ([]*metapb.Eventbus, error)
-	Get(ctx context.Context) (*metapb.Eventbus, error)
-	Create(ctx context.Context) error
-	Delete(ctx context.Context) error
+	Get(ctx context.Context, opts ...EventbusOption) (*metapb.Eventbus, error)
+	Create(ctx context.Context, namespace, name string) (*metapb.Eventbus, error)
+	Delete(ctx context.Context, opts ...EventbusOption) error
 }
 
 type Subscription interface {
 	List(ctx context.Context) ([]*metapb.Subscription, error)
-	Get(ctx context.Context) (*metapb.Subscription, error)
-	Create(ctx context.Context) error
-	Delete(ctx context.Context) error
-	Pause(ctx context.Context) error
-	Resume(ctx context.Context) error
+	Get(ctx context.Context, opts ...SubscriptionOption) (*metapb.Subscription, error)
+	Create(ctx context.Context, request *ctrlpb.SubscriptionRequest) (*metapb.Subscription, error)
+	Delete(ctx context.Context, opts ...SubscriptionOption) error
+	Pause(ctx context.Context, opts ...SubscriptionOption) error
+	Resume(ctx context.Context, opts ...SubscriptionOption) error
 }
 
 type ID uint64
+
+func (id ID) Hex() string {
+	return fmt.Sprintf("%016X", id)
+}
 
 func NewID(id uint64) ID {
 	return ID(id)

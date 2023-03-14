@@ -76,9 +76,9 @@ func (c *client) Close() error {
 }
 
 func (c *client) Publisher(opts ...EventbusOption) Publisher {
-	defaultOpts := defaultPublishOptions()
+	defaultOpts := defaultEventbusOptions()
 	for _, apply := range opts {
-		apply(defaultOpts)
+		apply(&defaultOpts)
 	}
 
 	value, ok := c.publisherCache.Load(defaultOpts.eventbusID)
@@ -95,7 +95,7 @@ func (c *client) Publisher(opts ...EventbusOption) Publisher {
 func (c *client) Subscriber(opts ...SubscriptionOption) Subscriber {
 	defaultOptions := defaultSubscribeOptions()
 	for _, apply := range opts {
-		apply(defaultOptions)
+		apply(&defaultOptions)
 	}
 
 	value, ok := c.subscriberCache.Load(defaultOptions.subscriptionID)

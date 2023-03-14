@@ -26,10 +26,10 @@ import (
 
 type publisher struct {
 	store   proxypb.StoreProxyClient
-	options *publishOptions
+	options eventbusOptions
 }
 
-func newPublisher(cc *grpc.ClientConn, opts *publishOptions) Publisher {
+func newPublisher(cc *grpc.ClientConn, opts eventbusOptions) Publisher {
 	return &publisher{
 		store:   proxypb.NewStoreProxyClient(cc),
 		options: opts,

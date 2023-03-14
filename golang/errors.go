@@ -14,38 +14,13 @@
 
 package vanus
 
-import (
-	"sync"
-
-	proxypb "github.com/vanus-labs/vanus/proto/pkg/proxy"
-)
-
-type controller struct {
-	controller proxypb.ControllerProxyClient
-	eCache     sync.Map
-	sCache     sync.Map
-	emu        sync.RWMutex
-	smu        sync.RWMutex
-}
+import "errors"
 
 var (
-	once sync.Once
-	ctrl *controller
+	ErrNamespaceNotFound    = errors.New("namespace is not found")
+	ErrEventbusNotFound     = errors.New("eventbus is not found")
+	ErrEventbusExist        = errors.New("eventbus already exists")
+	ErrEventbusIsZero       = errors.New("eventbus id can't be 0")
+	ErrInvalidArguments     = errors.New("invalid arguments")
+	ErrSubscriptionIDIsZero = errors.New("subscription id can't be 0")
 )
-
-func (c *client) Controller() Controller {
-	once.Do(func() {
-		ctrl = &controller{
-			controller: c.controller,
-		}
-	})
-	return ctrl
-}
-
-func (c *controller) Eventbus() Eventbus {
-	return &eventbus{controller: c.controller}
-}
-
-func (c *controller) Subscription() Subscription {
-	return &subscription{controller: c.controller}
-}

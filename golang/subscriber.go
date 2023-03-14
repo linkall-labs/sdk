@@ -62,7 +62,7 @@ func (m *message) Failed(err error) {
 
 type subscribe struct {
 	store           proxypb.StoreProxyClient
-	options         *subscribeOptions
+	options         subscriptionOptions
 	subscribeStream proxypb.StoreProxy_SubscribeClient
 	ackStream       proxypb.StoreProxy_AckClient
 	messageC        chan Message
@@ -122,7 +122,7 @@ func (s *subscribe) Close() error {
 	return nil
 }
 
-func newSubscriber(cc *grpc.ClientConn, opts *subscribeOptions) Subscriber {
+func newSubscriber(cc *grpc.ClientConn, opts subscriptionOptions) Subscriber {
 	return &subscribe{
 		store:    proxypb.NewStoreProxyClient(cc),
 		options:  opts,
@@ -132,7 +132,7 @@ func newSubscriber(cc *grpc.ClientConn, opts *subscribeOptions) Subscriber {
 	}
 }
 
-func (s *subscribe) SubscriptionID() string {
+func (s *subscribe) SubscriptionID() ID {
 	return s.options.subscriptionID
 }
 
@@ -161,7 +161,7 @@ func (s *subscribe) startReceive() error {
 		ctx := context.Background()
 		var err error
 		in := &proxypb.SubscribeRequest{
-			SubscriptionId: s.SubscriptionID(),
+			SubscriptionId: s.SubscriptionID().Hex(), // TODO(wenfeng) change to id in next release
 		}
 		s.subscribeStream, err = s.store.Subscribe(ctx, in)
 		if err != nil {
@@ -185,7 +185,7 @@ func (s *subscribe) startReceive() error {
 				ackFunc := func(err error) {
 					req := &proxypb.AckRequest{
 						SequenceId:     resp.SequenceId,
-						SubscriptionId: s.options.subscriptionID,
+						SubscriptionId: s.options.subscriptionID.Hex(), // TODO(wenfeng) change to id in next release
 						Success:        err == nil,
 					}
 					_err := s.ackStream.Send(req)
