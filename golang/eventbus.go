@@ -17,6 +17,7 @@ package vanus
 import (
 	"context"
 	"google.golang.org/protobuf/types/known/wrapperspb"
+	"strings"
 
 	ctrlpb "github.com/vanus-labs/vanus/proto/pkg/controller"
 	metapb "github.com/vanus-labs/vanus/proto/pkg/meta"
@@ -53,7 +54,7 @@ func (eb *eventbus) Create(ctx context.Context, namespace, name string) (*metapb
 	opts.eventbusName = name
 
 	meta, err := eb.get(ctx, opts)
-	if err != nil && err != ErrEventbusNotFound {
+	if err != nil && (err != ErrEventbusIsZero && err != ErrEventbusNotFound) {
 		return nil, err
 	}
 
@@ -61,12 +62,8 @@ func (eb *eventbus) Create(ctx context.Context, namespace, name string) (*metapb
 		return nil, ErrEventbusExist
 	}
 
-	if err != nil && (err != ErrEventbusIsZero || err != ErrEventbusNotFound) {
-		return nil, err
-	}
-
 	ns, err := eb.controller.GetNamespaceWithHumanFriendly(ctx, wrapperspb.String(opts.namespace))
-	if ns != nil {
+	if err != nil {
 		return nil, err
 	}
 
@@ -107,10 +104,15 @@ func (eb *eventbus) get(ctx context.Context, opts eventbusOptions) (*metapb.Even
 			if err != nil {
 				return nil, ErrNamespaceNotFound
 			}
-			return eb.controller.GetEventbusWithHumanFriendly(ctx, &ctrlpb.GetEventbusWithHumanFriendlyRequest{
+
+			pb, err := eb.controller.GetEventbusWithHumanFriendly(ctx, &ctrlpb.GetEventbusWithHumanFriendlyRequest{
 				NamespaceId:  ns.Id,
 				EventbusName: opts.eventbusName,
 			})
+			if strings.Contains(err.Error(), "") {
+				return nil, ErrEventbusNotFound
+			}
+			return pb, nil
 		}
 		return nil, ErrEventbusIsZero
 	}
