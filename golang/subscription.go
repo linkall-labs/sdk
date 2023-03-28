@@ -16,7 +16,6 @@ package vanus
 
 import (
 	"context"
-
 	ctrlpb "github.com/vanus-labs/vanus/proto/pkg/controller"
 	metapb "github.com/vanus-labs/vanus/proto/pkg/meta"
 	proxypb "github.com/vanus-labs/vanus/proto/pkg/proxy"
@@ -53,6 +52,11 @@ func (s *subscription) Create(ctx context.Context, request *ctrlpb.SubscriptionR
 	return s.controller.CreateSubscription(ctx, &ctrlpb.CreateSubscriptionRequest{
 		Subscription: request,
 	})
+}
+
+func (s *subscription) Update(ctx context.Context,
+	request *ctrlpb.UpdateSubscriptionRequest) (*metapb.Subscription, error) {
+	return s.controller.UpdateSubscription(ctx, request)
 }
 
 func (s *subscription) Delete(ctx context.Context, opts ...SubscriptionOption) error {
