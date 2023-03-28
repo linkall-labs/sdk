@@ -66,6 +66,7 @@ type Eventbus interface {
 type Subscription interface {
 	List(ctx context.Context) ([]*metapb.Subscription, error)
 	Get(ctx context.Context, opts ...SubscriptionOption) (*metapb.Subscription, error)
+	Update(ctx context.Context, request *ctrlpb.UpdateSubscriptionRequest) (*metapb.Subscription, error)
 	Create(ctx context.Context, request *ctrlpb.SubscriptionRequest) (*metapb.Subscription, error)
 	Delete(ctx context.Context, opts ...SubscriptionOption) error
 	Pause(ctx context.Context, opts ...SubscriptionOption) error
