@@ -15,17 +15,22 @@
 package vanus
 
 import (
+	// standard libraries.
 	"errors"
 	"sync"
 
+	// third-party libraries.
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	// first-party libraries.
+	"github.com/vanus-labs/vanus/pkg/grpc_credentials"
 	proxypb "github.com/vanus-labs/vanus/proto/pkg/proxy"
 )
 
 type ClientOptions struct {
 	Endpoint string
+	Token    string
 }
 
 type streamState string
@@ -51,8 +56,13 @@ func Connect(options *ClientOptions) (Client, error) {
 		// log.Error(context.Background(), "endpoint is required for client", nil)
 		return nil, errors.New("endpoint is required for client")
 	}
-	var opts []grpc.DialOption
-	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	opts := []grpc.DialOption{
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	}
+	if options.Token != "" {
+		opts = append(opts, grpc.WithPerRPCCredentials(
+			grpc_credentials.NewVanusPerRPCCredentials(options.Token)))
+	}
 	conn, err := grpc.Dial(options.Endpoint, opts...)
 	if err != nil {
 		//log.Error(context.Background(), "grpc dial error", map[string]interface{}{
@@ -81,6 +91,7 @@ func (c *client) Publisher(opts ...EventbusOption) Publisher {
 		apply(&defaultOpts)
 	}
 
+	// TODO: resolve eventbusID from namespace/eventbusName
 	value, ok := c.publisherCache.Load(defaultOpts.eventbusID)
 	if ok {
 		return value.(Publisher)
