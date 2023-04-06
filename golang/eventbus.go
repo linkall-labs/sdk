@@ -15,22 +15,25 @@
 package vanus
 
 import (
+	// standard libraries.
 	"context"
-	"google.golang.org/protobuf/types/known/wrapperspb"
-	"strings"
 
+	// third-party libraries.
+	"google.golang.org/protobuf/types/known/wrapperspb"
+
+	// first-party libraries.
+	"github.com/vanus-labs/vanus/pkg/errors"
 	ctrlpb "github.com/vanus-labs/vanus/proto/pkg/controller"
 	metapb "github.com/vanus-labs/vanus/proto/pkg/meta"
 	proxypb "github.com/vanus-labs/vanus/proto/pkg/proxy"
 )
 
-var (
-	_ Eventbus = &eventbus{}
-)
-
 type eventbus struct {
 	controller proxypb.ControllerProxyClient
 }
+
+// Make sure eventbus implements Eventbus.
+var _ Eventbus = (*eventbus)(nil)
 
 func (eb *eventbus) List(ctx context.Context) ([]*metapb.Eventbus, error) {
 	res, err := eb.controller.ListEventbus(ctx, &ctrlpb.ListEventbusRequest{})
@@ -53,12 +56,11 @@ func (eb *eventbus) Create(ctx context.Context, namespace, name string) (*metapb
 	opts.namespace = namespace
 	opts.eventbusName = name
 
-	meta, err := eb.get(ctx, opts)
-	if err != nil && (err != ErrEventbusIsZero && err != ErrEventbusNotFound) {
-		return nil, err
-	}
-
-	if meta != nil {
+	_, err := eb.get(ctx, opts)
+	if err != ErrEventbusNotFound {
+		if err != nil {
+			return nil, err
+		}
 		return nil, ErrEventbusExist
 	}
 
@@ -105,14 +107,15 @@ func (eb *eventbus) get(ctx context.Context, opts eventbusOptions) (*metapb.Even
 				return nil, ErrNamespaceNotFound
 			}
 
-			pb, err := eb.controller.GetEventbusWithHumanFriendly(ctx, &ctrlpb.GetEventbusWithHumanFriendlyRequest{
+			eb, err := eb.controller.GetEventbusWithHumanFriendly(ctx, &ctrlpb.GetEventbusWithHumanFriendlyRequest{
 				NamespaceId:  ns.Id,
 				EventbusName: opts.eventbusName,
 			})
-			if strings.Contains(err.Error(), "") {
+			if errors.Is(err, errors.ErrResourceNotFound) {
 				return nil, ErrEventbusNotFound
 			}
-			return pb, nil
+			// TODO(james.yin): return ErrorType?
+			return eb, err
 		}
 		return nil, ErrEventbusIsZero
 	}
