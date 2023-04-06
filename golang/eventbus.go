@@ -17,6 +17,7 @@ package vanus
 import (
 	// standard libraries.
 	"context"
+	"strings"
 
 	// third-party libraries.
 	"google.golang.org/protobuf/types/known/wrapperspb"
@@ -112,6 +113,9 @@ func (eb *eventbus) get(ctx context.Context, opts eventbusOptions) (*metapb.Even
 				EventbusName: opts.eventbusName,
 			})
 			if errors.Is(err, errors.ErrResourceNotFound) {
+				return nil, ErrEventbusNotFound
+			} else if err != nil && strings.Contains(err.Error(), "resource not found") {
+				// Compatible with 0.7.0, and will be removed in the future.
 				return nil, ErrEventbusNotFound
 			}
 			// TODO(james.yin): return ErrorType?
