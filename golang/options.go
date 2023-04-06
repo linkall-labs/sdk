@@ -116,7 +116,7 @@ func WithMaxBatchSize(size int) SubscriptionOption {
 
 func WithActiveMode(is bool) SubscriptionOption {
 	return func(opt *subscriptionOptions) {
-		opt.activeMode = true
+		opt.activeMode = is
 	}
 }
 
