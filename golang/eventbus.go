@@ -112,9 +112,11 @@ func (eb *eventbus) get(ctx context.Context, opts eventbusOptions) (*metapb.Even
 				NamespaceId:  ns.Id,
 				EventbusName: opts.eventbusName,
 			})
-			if errors.Is(err, errors.ErrResourceNotFound) {
+			switch {
+			case err == nil:
+			case errors.Is(err, errors.ErrResourceNotFound):
 				return nil, ErrEventbusNotFound
-			} else if err != nil && strings.Contains(err.Error(), "resource not found") {
+			case strings.Contains(err.Error(), "eventbus not found") || strings.Contains(err.Error(), "9400"):
 				// Compatible with 0.7.0, and will be removed in the future.
 				return nil, ErrEventbusNotFound
 			}
