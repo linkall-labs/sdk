@@ -15,6 +15,7 @@
 package vanus
 
 import (
+	"context"
 	// standard libraries.
 	"errors"
 	"sync"
@@ -45,7 +46,6 @@ type client struct {
 	endpoint        string
 	controller      proxypb.ControllerProxyClient
 	subscriberCache sync.Map
-	publisherCache  sync.Map
 	subMu           sync.RWMutex
 	pubMu           sync.RWMutex
 	conn            *grpc.ClientConn
@@ -91,16 +91,18 @@ func (c *client) Publisher(opts ...EventbusOption) Publisher {
 		apply(&defaultOpts)
 	}
 
-	// TODO: resolve eventbusID from namespace/eventbusName
-	value, ok := c.publisherCache.Load(defaultOpts.eventbusID)
-	if ok {
-		return value.(Publisher)
+	// lazy initialize publisher
+	f := func(ctx context.Context, opt *eventbusOptions) error {
+		md, err := c.Controller().Eventbus().Get(ctx, WithEventbus(opt.namespace, opt.eventbusName))
+		if err != nil {
+			return err
+		}
+		opt.eventbusID = md.Id
+		return nil
 	}
 
 	// TODO(wenfeng) use connection pool
-	publisher := newPublisher(c.conn, defaultOpts)
-	value, _ = c.publisherCache.LoadOrStore(defaultOpts.eventbusID, publisher)
-	return value.(Publisher)
+	return newPublisher(c.conn, f, defaultOpts)
 }
 
 func (c *client) Subscriber(opts ...SubscriptionOption) Subscriber {

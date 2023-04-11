@@ -16,6 +16,7 @@ package vanus
 
 import (
 	"context"
+	"sync"
 
 	v2 "github.com/cloudevents/sdk-go/v2"
 	"google.golang.org/grpc"
@@ -25,14 +26,18 @@ import (
 )
 
 type publisher struct {
-	store   proxypb.StoreProxyClient
-	options eventbusOptions
+	store    proxypb.StoreProxyClient
+	options  eventbusOptions
+	idSetter func(ctx context.Context, opt *eventbusOptions) error
+	mutex    sync.Mutex
 }
 
-func newPublisher(cc *grpc.ClientConn, opts eventbusOptions) Publisher {
+func newPublisher(cc *grpc.ClientConn, idSetter func(ctx context.Context, opt *eventbusOptions) error,
+	opts eventbusOptions) Publisher {
 	return &publisher{
-		store:   proxypb.NewStoreProxyClient(cc),
-		options: opts,
+		store:    proxypb.NewStoreProxyClient(cc),
+		options:  opts,
+		idSetter: idSetter,
 	}
 }
 
@@ -57,6 +62,15 @@ func (p *publisher) Publish(ctx context.Context, events ...*v2.Event) error {
 			return err
 		}
 		pbs = append(pbs, pb)
+	}
+
+	if p.options.eventbusID == 0 {
+		p.mutex.Lock()
+		err := p.idSetter(ctx, &p.options)
+		p.mutex.Unlock()
+		if err != nil {
+			return err
+		}
 	}
 
 	in := &proxypb.PublishRequest{
