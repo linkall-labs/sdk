@@ -57,6 +57,7 @@ func Connect(options *ClientOptions) (Client, error) {
 		return nil, errors.New("endpoint is required for client")
 	}
 	opts := []grpc.DialOption{
+		grpc.WithUnaryInterceptor(UnaryClientInterceptor()),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	}
 	if options.Token != "" {
