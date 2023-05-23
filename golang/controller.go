@@ -15,31 +15,15 @@
 package vanus
 
 import (
-	"sync"
-
 	proxypb "github.com/vanus-labs/vanus/proto/pkg/proxy"
 )
 
-type controller struct {
-	controller proxypb.ControllerProxyClient
-	eCache     sync.Map
-	sCache     sync.Map
-	emu        sync.RWMutex
-	smu        sync.RWMutex
+func (c *client) Controller() Controller {
+	return &controller{controller: c.controller}
 }
 
-var (
-	once sync.Once
-	ctrl *controller
-)
-
-func (c *client) Controller() Controller {
-	once.Do(func() {
-		ctrl = &controller{
-			controller: c.controller,
-		}
-	})
-	return ctrl
+type controller struct {
+	controller proxypb.ControllerProxyClient
 }
 
 func (c *controller) Eventbus() Eventbus {
