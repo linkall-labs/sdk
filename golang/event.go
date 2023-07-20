@@ -15,25 +15,34 @@
 package vanus
 
 import (
+	// standard libraries.
+	"context"
+
+	// third-party libraries.
+
+	// first-party libraries.
 	proxypb "github.com/vanus-labs/vanus/proto/pkg/proxy"
 )
 
-func (c *client) Controller() Controller {
-	return &controller{controller: c.controller}
-}
-
-type controller struct {
+type event struct {
 	controller proxypb.ControllerProxyClient
 }
 
-func (c *controller) Event() Event {
-	return &event{controller: c.controller}
-}
+// Make sure eventbus implements Eventbus.
+var _ Event = (*event)(nil)
 
-func (c *controller) Eventbus() Eventbus {
-	return &eventbus{controller: c.controller}
-}
-
-func (c *controller) Subscription() Subscription {
-	return &subscription{controller: c.controller}
+func (e *event) Get(ctx context.Context, opts ...EventOption) (*proxypb.GetEventResponse, error) {
+	o := newEventOptions(opts...)
+	if o.eventbusID == 0 {
+		return nil, ErrEventbusIsZero
+	}
+	if o.eventID == "" || o.number == 0 {
+		return nil, ErrInvalidArguments
+	}
+	return e.controller.GetEvent(ctx, &proxypb.GetEventRequest{
+		EventbusId: o.eventbusID,
+		EventId:    o.eventID,
+		Offset:     o.offset,
+		Number:     o.number,
+	})
 }
