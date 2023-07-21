@@ -23,7 +23,7 @@ import (
 
 func main() {
 	opts := &vanus.ClientOptions{
-		Endpoint: "a4b6139da8ab049dda9e8e4d839dcde7-1895166820.us-west-2.elb.amazonaws.com:8080",
+		Endpoint: "172.17.0.2:30001",
 		Token:    "admin",
 	}
 
