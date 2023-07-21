@@ -17,13 +17,14 @@ package vanus
 import (
 	"context"
 	"fmt"
-	ctrlpb "github.com/vanus-labs/vanus/proto/pkg/controller"
 	"io"
 	"strconv"
 
 	v2 "github.com/cloudevents/sdk-go/v2"
 
+	ctrlpb "github.com/vanus-labs/vanus/proto/pkg/controller"
 	metapb "github.com/vanus-labs/vanus/proto/pkg/meta"
+	proxypb "github.com/vanus-labs/vanus/proto/pkg/proxy"
 )
 
 type Client interface {
@@ -52,8 +53,13 @@ type Message interface {
 }
 
 type Controller interface {
+	Event() Event
 	Eventbus() Eventbus
 	Subscription() Subscription
+}
+
+type Event interface {
+	Get(ctx context.Context, opts ...EventOption) (*proxypb.GetEventResponse, error)
 }
 
 type Eventbus interface {

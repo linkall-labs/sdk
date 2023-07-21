@@ -30,6 +30,43 @@ const (
 	defaultParallelism  = 4
 )
 
+type EventOption func(opt *eventOptions)
+
+type eventOptions struct {
+	eventbusID uint64
+	eventID    string
+	offset     int64
+	number     int32
+}
+
+func newEventOptions(options ...EventOption) eventOptions {
+	opts := defaultEventOptions()
+
+	for _, apply := range options {
+		apply(&opts)
+	}
+	return opts
+}
+
+func defaultEventOptions() eventOptions {
+	return eventOptions{}
+}
+
+func WithBatchEvents(eventbusID uint64, offset int64, number int32) EventOption {
+	return func(opt *eventOptions) {
+		opt.eventbusID = eventbusID
+		opt.offset = offset
+		opt.number = number
+	}
+}
+
+func WithEventID(eventbusID uint64, eventID string) EventOption {
+	return func(opt *eventOptions) {
+		opt.eventbusID = eventbusID
+		opt.eventID = eventID
+	}
+}
+
 type EventbusOption func(opt *eventbusOptions)
 
 type eventbusOptions struct {
