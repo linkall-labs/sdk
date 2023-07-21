@@ -36,7 +36,7 @@ func (e *event) Get(ctx context.Context, opts ...EventOption) (*proxypb.GetEvent
 	if o.eventbusID == 0 {
 		return nil, ErrEventbusIsZero
 	}
-	if o.eventID == "" || o.number == 0 {
+	if o.eventID == "" && o.number == 0 {
 		return nil, ErrInvalidArguments
 	}
 	return e.controller.GetEvent(ctx, &proxypb.GetEventRequest{

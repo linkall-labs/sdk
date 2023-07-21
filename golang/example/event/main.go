@@ -18,9 +18,6 @@ import (
 	"context"
 	"fmt"
 
-	v2 "github.com/cloudevents/sdk-go/v2"
-	"github.com/google/uuid"
-
 	vanus "github.com/vanus-labs/sdk/golang"
 )
 
@@ -35,17 +32,14 @@ func main() {
 		panic("failed to connect to Vanus cluster, error: " + err.Error())
 	}
 
-	p := c.Publisher(vanus.WithEventbus("default", "quick-start"))
-
-	event := v2.NewEvent()
-	event.SetID(uuid.New().String())
-	event.SetSource("example-source")
-	event.SetType("example-type")
-	_ = event.SetData(v2.ApplicationJSON, map[string]string{"hello": "world"})
-	err = p.Publish(context.Background(), &event)
+	eb, err := c.Controller().Eventbus().Get(context.Background(), vanus.WithEventbus("default", "quick-start"))
 	if err != nil {
-		fmt.Printf("publish event failed, err: %s\n", err.Error())
-		return
+		panic(err)
 	}
-	fmt.Printf("publish event success\n")
+
+	es, err := c.Controller().Event().Get(context.Background(), vanus.WithBatchEvents(eb.Id, 0, 1))
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("event data: %+v\n", es.Events[0].String())
 }
