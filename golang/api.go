@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+	"time"
 
 	v2 "github.com/cloudevents/sdk-go/v2"
 
@@ -67,6 +68,7 @@ type Eventbus interface {
 	Get(ctx context.Context, opts ...EventbusOption) (*metapb.Eventbus, error)
 	Create(ctx context.Context, namespace, name string) (*metapb.Eventbus, error)
 	Delete(ctx context.Context, opts ...EventbusOption) error
+	LookupOffset(ctx context.Context, timestamp time.Time, opts ...EventbusOption) (*proxypb.LookupOffsetResponse, error)
 }
 
 type Subscription interface {
