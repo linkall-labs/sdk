@@ -33,7 +33,7 @@ func main() {
 		panic("failed to connect to Vanus cluster, error: " + err.Error())
 	}
 
-	resp, err := c.Controller().Eventbus().LookupOffset(context.Background(), time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC).UnixMilli(), vanus.WithEventbus("default", "quick-start"))
+	resp, err := c.Controller().Eventbus().LookupOffset(context.Background(), time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC), vanus.WithEventbus("default", "quick-start"))
 	if err != nil {
 		panic(err)
 	}

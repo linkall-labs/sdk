@@ -18,6 +18,7 @@ import (
 	// standard libraries.
 	"context"
 	"strings"
+	"time"
 
 	// third-party libraries.
 	"google.golang.org/protobuf/types/known/wrapperspb"
@@ -36,7 +37,7 @@ type eventbus struct {
 // Make sure eventbus implements Eventbus.
 var _ Eventbus = (*eventbus)(nil)
 
-func (eb *eventbus) LookupOffset(ctx context.Context, timestamp int64, opts ...EventbusOption) (*proxypb.LookupOffsetResponse, error) {
+func (eb *eventbus) LookupOffset(ctx context.Context, timestamp time.Time, opts ...EventbusOption) (*proxypb.LookupOffsetResponse, error) {
 	ebOpts := newEventbusOptions(opts...)
 	eventbus, err := eb.get(ctx, ebOpts)
 	if err != nil {
@@ -44,7 +45,7 @@ func (eb *eventbus) LookupOffset(ctx context.Context, timestamp int64, opts ...E
 	}
 	resp, err := eb.controller.LookupOffset(ctx, &proxypb.LookupOffsetRequest{
 		EventbusId: eventbus.Id,
-		Timestamp:  timestamp,
+		Timestamp:  timestamp.UnixMilli(),
 	})
 	if err != nil {
 		return nil, err
