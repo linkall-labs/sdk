@@ -36,6 +36,22 @@ type eventbus struct {
 // Make sure eventbus implements Eventbus.
 var _ Eventbus = (*eventbus)(nil)
 
+func (eb *eventbus) LookupOffset(ctx context.Context, timestamp int64, opts ...EventbusOption) (*proxypb.LookupOffsetResponse, error) {
+	ebOpts := newEventbusOptions(opts...)
+	eventbus, err := eb.get(ctx, ebOpts)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := eb.controller.LookupOffset(ctx, &proxypb.LookupOffsetRequest{
+		EventbusId: eventbus.Id,
+		Timestamp:  timestamp,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
 func (eb *eventbus) List(ctx context.Context) ([]*metapb.Eventbus, error) {
 	res, err := eb.controller.ListEventbus(ctx, &ctrlpb.ListEventbusRequest{})
 	if err != nil {

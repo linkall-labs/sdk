@@ -67,6 +67,7 @@ type Eventbus interface {
 	Get(ctx context.Context, opts ...EventbusOption) (*metapb.Eventbus, error)
 	Create(ctx context.Context, namespace, name string) (*metapb.Eventbus, error)
 	Delete(ctx context.Context, opts ...EventbusOption) error
+	LookupOffset(ctx context.Context, timestamp int64, opts ...EventbusOption) (*proxypb.LookupOffsetResponse, error)
 }
 
 type Subscription interface {
