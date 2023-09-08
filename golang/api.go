@@ -66,7 +66,7 @@ type Event interface {
 type Eventbus interface {
 	List(ctx context.Context) ([]*metapb.Eventbus, error)
 	Get(ctx context.Context, opts ...EventbusOption) (*metapb.Eventbus, error)
-	Create(ctx context.Context, namespace, name string) (*metapb.Eventbus, error)
+	Create(ctx context.Context, opts ...EventbusOption) (*metapb.Eventbus, error)
 	Delete(ctx context.Context, opts ...EventbusOption) error
 	LookupOffset(ctx context.Context, timestamp time.Time, opts ...EventbusOption) (*proxypb.LookupOffsetResponse, error)
 }
@@ -75,7 +75,7 @@ type Subscription interface {
 	List(ctx context.Context) ([]*metapb.Subscription, error)
 	Get(ctx context.Context, opts ...SubscriptionOption) (*metapb.Subscription, error)
 	Update(ctx context.Context, request *ctrlpb.UpdateSubscriptionRequest) (*metapb.Subscription, error)
-	Create(ctx context.Context, request *ctrlpb.SubscriptionRequest) (*metapb.Subscription, error)
+	Create(ctx context.Context, request *ctrlpb.SubscriptionRequest, opts ...SubscriptionOption) (*metapb.Subscription, error)
 	Delete(ctx context.Context, opts ...SubscriptionOption) error
 	Pause(ctx context.Context, opts ...SubscriptionOption) error
 	Resume(ctx context.Context, opts ...SubscriptionOption) error
