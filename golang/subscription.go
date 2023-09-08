@@ -45,8 +45,11 @@ func (s *subscription) Get(ctx context.Context, opts ...SubscriptionOption) (*me
 		return nil, ErrSubscriptionIDIsZero
 	}
 	subscription, err := s.controller.GetSubscription(ctx, &ctrlpb.GetSubscriptionRequest{Id: uint64(o.subscriptionID)})
-	if errors.Is(err, errors.ErrResourceNotFound) {
-		return nil, ErrSubscriptionNotFound
+	if err != nil {
+		if errors.Is(err, errors.ErrResourceNotFound) {
+			return nil, ErrSubscriptionNotFound
+		}
+		return nil, err
 	}
 	return subscription, nil
 }
