@@ -16,6 +16,8 @@ package vanus
 
 import (
 	"context"
+
+	"github.com/vanus-labs/vanus/pkg/errors"
 	ctrlpb "github.com/vanus-labs/vanus/proto/pkg/controller"
 	metapb "github.com/vanus-labs/vanus/proto/pkg/meta"
 	proxypb "github.com/vanus-labs/vanus/proto/pkg/proxy"
@@ -38,20 +40,29 @@ func (s *subscription) List(ctx context.Context) ([]*metapb.Subscription, error)
 }
 
 func (s *subscription) Get(ctx context.Context, opts ...SubscriptionOption) (*metapb.Subscription, error) {
-
 	o := newSubscriptionOptions(opts...)
-
 	if o.subscriptionID == 0 {
 		return nil, ErrSubscriptionIDIsZero
 	}
-
-	return s.controller.GetSubscription(ctx, &ctrlpb.GetSubscriptionRequest{Id: uint64(o.subscriptionID)})
+	subscription, err := s.controller.GetSubscription(ctx, &ctrlpb.GetSubscriptionRequest{Id: uint64(o.subscriptionID)})
+	if err != nil {
+		if errors.Is(err, errors.ErrResourceNotFound) {
+			return nil, ErrSubscriptionNotFound
+		}
+		return nil, err
+	}
+	return subscription, nil
 }
 
-func (s *subscription) Create(ctx context.Context, request *ctrlpb.SubscriptionRequest) (*metapb.Subscription, error) {
-	return s.controller.CreateSubscription(ctx, &ctrlpb.CreateSubscriptionRequest{
+func (s *subscription) Create(ctx context.Context, request *ctrlpb.SubscriptionRequest, opts ...SubscriptionOption) (*metapb.Subscription, error) {
+	o := newSubscriptionOptions(opts...)
+	req := &ctrlpb.CreateSubscriptionRequest{
 		Subscription: request,
-	})
+	}
+	if o.subscriptionID != 0 {
+		req.Id = uint64(o.subscriptionID)
+	}
+	return s.controller.CreateSubscription(ctx, req)
 }
 
 func (s *subscription) Update(ctx context.Context,

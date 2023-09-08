@@ -65,16 +65,12 @@ func (eb *eventbus) Get(ctx context.Context, opts ...EventbusOption) (*metapb.Ev
 	return eb.get(ctx, newEventbusOptions(opts...))
 }
 
-func (eb *eventbus) Create(ctx context.Context, namespace, name string) (*metapb.Eventbus, error) {
-	if name == "" || namespace == "" {
+func (eb *eventbus) Create(ctx context.Context, opts ...EventbusOption) (*metapb.Eventbus, error) {
+	ebOpts := newEventbusOptions(opts...)
+	if ebOpts.eventbusName == "" || ebOpts.namespace == "" {
 		return nil, ErrInvalidArguments
 	}
-
-	opts := defaultEventbusOptions()
-	opts.namespace = namespace
-	opts.eventbusName = name
-
-	_, err := eb.get(ctx, opts)
+	_, err := eb.get(ctx, ebOpts)
 	if err != ErrEventbusNotFound {
 		if err != nil {
 			return nil, err
@@ -82,13 +78,14 @@ func (eb *eventbus) Create(ctx context.Context, namespace, name string) (*metapb
 		return nil, ErrEventbusExist
 	}
 
-	ns, err := eb.controller.GetNamespaceWithHumanFriendly(ctx, wrapperspb.String(opts.namespace))
+	ns, err := eb.controller.GetNamespaceWithHumanFriendly(ctx, wrapperspb.String(ebOpts.namespace))
 	if err != nil {
 		return nil, err
 	}
 
 	return eb.controller.CreateEventbus(ctx, &ctrlpb.CreateEventbusRequest{
-		Name:        opts.eventbusName,
+		Id:          ebOpts.eventbusID,
+		Name:        ebOpts.eventbusName,
 		NamespaceId: ns.Id,
 		LogNumber:   1,
 	})
