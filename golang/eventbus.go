@@ -114,6 +114,17 @@ func (eb *eventbus) Delete(ctx context.Context, opts ...EventbusOption) error {
 	return nil
 }
 
+func (eb *eventbus) CheckHealth(ctx context.Context, opts ...EventbusOption) error {
+	o := newEventbusOptions(opts...)
+	if o.eventbusID == 0 {
+		return ErrEventbusIsZero
+	}
+	_, err := eb.controller.ValidateEventbus(ctx, &proxypb.ValidateEventbusRequest{
+		EventbusId: o.eventbusID,
+	})
+	return err
+}
+
 func (eb *eventbus) get(ctx context.Context, opts eventbusOptions) (*metapb.Eventbus, error) {
 	if opts.eventbusID == 0 {
 		if opts.namespace != "" && opts.eventbusName != "" {
@@ -139,5 +150,12 @@ func (eb *eventbus) get(ctx context.Context, opts eventbusOptions) (*metapb.Even
 		}
 		return nil, ErrEventbusIsZero
 	}
-	return eb.controller.GetEventbus(ctx, wrapperspb.UInt64(opts.eventbusID))
+	eventbus, err := eb.controller.GetEventbus(ctx, wrapperspb.UInt64(opts.eventbusID))
+	if err != nil {
+		if errors.Is(err, errors.ErrResourceNotFound) {
+			return nil, ErrEventbusNotFound
+		}
+		return nil, err
+	}
+	return eventbus, nil
 }

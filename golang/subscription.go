@@ -62,6 +62,13 @@ func (s *subscription) Create(ctx context.Context, request *ctrlpb.SubscriptionR
 	if o.subscriptionID != 0 {
 		req.Id = uint64(o.subscriptionID)
 	}
+	_, err := s.get(ctx, o)
+	if err != ErrSubscriptionNotFound {
+		if err != nil {
+			return nil, err
+		}
+		return nil, ErrSubscriptionExist
+	}
 	return s.controller.CreateSubscription(ctx, req)
 }
 
@@ -128,4 +135,18 @@ func (s *subscription) Resume(ctx context.Context, opts ...SubscriptionOption) e
 		return err
 	}
 	return nil
+}
+
+func (s *subscription) get(ctx context.Context, opts subscriptionOptions) (*metapb.Subscription, error) {
+	if opts.subscriptionID == 0 {
+		return nil, ErrSubscriptionIDIsZero
+	}
+	subscription, err := s.controller.GetSubscription(ctx, &ctrlpb.GetSubscriptionRequest{Id: uint64(opts.subscriptionID)})
+	if err != nil {
+		if errors.Is(err, errors.ErrResourceNotFound) {
+			return nil, ErrSubscriptionNotFound
+		}
+		return nil, err
+	}
+	return subscription, nil
 }

@@ -56,6 +56,7 @@ type Message interface {
 type Controller interface {
 	Event() Event
 	Eventbus() Eventbus
+	Namespace() Namespace
 	Subscription() Subscription
 }
 
@@ -69,6 +70,11 @@ type Eventbus interface {
 	Create(ctx context.Context, opts ...EventbusOption) (*metapb.Eventbus, error)
 	Delete(ctx context.Context, opts ...EventbusOption) error
 	LookupOffset(ctx context.Context, timestamp time.Time, opts ...EventbusOption) (*proxypb.LookupOffsetResponse, error)
+	CheckHealth(ctx context.Context, opts ...EventbusOption) error
+}
+
+type Namespace interface {
+	Get(ctx context.Context, name string) (*metapb.Namespace, error)
 }
 
 type Subscription interface {

@@ -22,6 +22,7 @@ var (
 	ErrEventbusExist        = errors.New("eventbus already exists")
 	ErrEventbusIsZero       = errors.New("eventbus id can't be 0")
 	ErrInvalidArguments     = errors.New("invalid arguments")
+	ErrSubscriptionExist    = errors.New("subscription already exists")
 	ErrSubscriptionNotFound = errors.New("subscription is not found")
 	ErrSubscriptionIDIsZero = errors.New("subscription id can't be 0")
 )
