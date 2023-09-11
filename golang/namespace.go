@@ -15,29 +15,28 @@
 package vanus
 
 import (
+	// standard libraries.
+	"context"
+
+	// third-party libraries.
+	"google.golang.org/protobuf/types/known/wrapperspb"
+
+	// first-party libraries.
+	metapb "github.com/vanus-labs/vanus/proto/pkg/meta"
 	proxypb "github.com/vanus-labs/vanus/proto/pkg/proxy"
 )
 
-func (c *client) Controller() Controller {
-	return &controller{controller: c.controller}
-}
-
-type controller struct {
+type namespace struct {
 	controller proxypb.ControllerProxyClient
 }
 
-func (c *controller) Event() Event {
-	return &event{controller: c.controller}
-}
+// Make sure namespace implements Namespace.
+var _ Namespace = (*namespace)(nil)
 
-func (c *controller) Eventbus() Eventbus {
-	return &eventbus{controller: c.controller}
-}
-
-func (c *controller) Namespace() Namespace {
-	return &namespace{controller: c.controller}
-}
-
-func (c *controller) Subscription() Subscription {
-	return &subscription{controller: c.controller}
+func (ns *namespace) Get(ctx context.Context, name string) (*metapb.Namespace, error) {
+	nsRef, err := ns.controller.GetNamespaceWithHumanFriendly(ctx, wrapperspb.String(name))
+	if err != nil {
+		return nil, err
+	}
+	return nsRef, nil
 }

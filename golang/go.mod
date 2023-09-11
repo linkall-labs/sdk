@@ -5,8 +5,8 @@ go 1.18
 require (
 	github.com/cloudevents/sdk-go/v2 v2.14.0
 	github.com/google/uuid v1.3.0
-	github.com/vanus-labs/vanus/pkg v0.9.0
-	github.com/vanus-labs/vanus/proto v0.9.0
+	github.com/vanus-labs/vanus/pkg v0.9.1-0.20230911021253-28f745f1bc89
+	github.com/vanus-labs/vanus/proto v0.9.1-0.20230911021253-28f745f1bc89
 	go.uber.org/atomic v1.4.0
 	google.golang.org/grpc v1.54.0
 	google.golang.org/protobuf v1.30.0
