@@ -61,13 +61,13 @@ func (s *subscription) Create(ctx context.Context, request *ctrlpb.SubscriptionR
 	}
 	if o.subscriptionID != 0 {
 		req.Id = uint64(o.subscriptionID)
-	}
-	_, err := s.get(ctx, o)
-	if err != ErrSubscriptionNotFound {
-		if err != nil {
-			return nil, err
+		_, err := s.get(ctx, o)
+		if err != ErrSubscriptionNotFound {
+			if err != nil {
+				return nil, err
+			}
+			return nil, ErrSubscriptionExist
 		}
-		return nil, ErrSubscriptionExist
 	}
 	return s.controller.CreateSubscription(ctx, req)
 }
