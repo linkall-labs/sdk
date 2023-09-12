@@ -69,13 +69,6 @@ func (s *subscription) Create(ctx context.Context, request *ctrlpb.SubscriptionR
 			return nil, ErrSubscriptionExist
 		}
 	}
-	_, err := s.get(ctx, o)
-	if err != ErrSubscriptionNotFound {
-		if err != nil {
-			return nil, err
-		}
-		return nil, ErrSubscriptionExist
-	}
 	return s.controller.CreateSubscription(ctx, req)
 }
 
