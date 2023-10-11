@@ -92,9 +92,7 @@ func (eb *eventbus) Create(ctx context.Context, opts ...EventbusOption) (*metapb
 }
 
 func (eb *eventbus) Delete(ctx context.Context, opts ...EventbusOption) error {
-	o := newEventbusOptions(opts...)
-	pb, err := eb.get(ctx, o)
-
+	pb, err := eb.get(ctx, newEventbusOptions(opts...))
 	if err == ErrEventbusNotFound {
 		return nil
 	}
@@ -107,7 +105,7 @@ func (eb *eventbus) Delete(ctx context.Context, opts ...EventbusOption) error {
 		return nil
 	}
 
-	_, err = eb.controller.DeleteEventbus(ctx, &wrapperspb.UInt64Value{Value: o.eventbusID})
+	_, err = eb.controller.DeleteEventbus(ctx, &wrapperspb.UInt64Value{Value: pb.Id})
 	if err != nil {
 		return err
 	}
