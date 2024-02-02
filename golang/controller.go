@@ -15,7 +15,7 @@
 package vanus
 
 import (
-	proxypb "github.com/vanus-labs/vanus/proto/pkg/proxy"
+	proxypb "github.com/vanus-labs/vanus/api/proxy"
 )
 
 func (c *client) Controller() Controller {

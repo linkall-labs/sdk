@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc"
 
 	// first-party libraries.
-	"github.com/vanus-labs/vanus/pkg/errors"
+	"github.com/vanus-labs/vanus/api/errors"
 )
 
 func UnaryClientInterceptor() grpc.UnaryClientInterceptor {

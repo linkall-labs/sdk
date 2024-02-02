@@ -23,9 +23,10 @@ import (
 
 	v2 "github.com/cloudevents/sdk-go/v2"
 	"github.com/cloudevents/sdk-go/v2/types"
-	"github.com/vanus-labs/vanus/proto/pkg/cloudevents"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
+
+	"github.com/vanus-labs/vanus/api/cloudevents"
 )
 
 const (

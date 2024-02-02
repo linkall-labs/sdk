@@ -18,10 +18,8 @@ import (
 	// standard libraries.
 	"context"
 
-	// third-party libraries.
-
 	// first-party libraries.
-	proxypb "github.com/vanus-labs/vanus/proto/pkg/proxy"
+	proxypb "github.com/vanus-labs/vanus/api/proxy"
 )
 
 type event struct {

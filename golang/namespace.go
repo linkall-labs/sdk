@@ -22,8 +22,8 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
 	// first-party libraries.
-	metapb "github.com/vanus-labs/vanus/proto/pkg/meta"
-	proxypb "github.com/vanus-labs/vanus/proto/pkg/proxy"
+	metapb "github.com/vanus-labs/vanus/api/meta"
+	proxypb "github.com/vanus-labs/vanus/api/proxy"
 )
 
 type namespace struct {

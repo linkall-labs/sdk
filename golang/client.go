@@ -15,8 +15,8 @@
 package vanus
 
 import (
-	"context"
 	// standard libraries.
+	"context"
 	"errors"
 	"sync"
 
@@ -25,8 +25,8 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	// first-party libraries.
-	"github.com/vanus-labs/vanus/pkg/grpc_credentials"
-	proxypb "github.com/vanus-labs/vanus/proto/pkg/proxy"
+	"github.com/vanus-labs/vanus/api/credentials"
+	proxypb "github.com/vanus-labs/vanus/api/proxy"
 )
 
 type ClientOptions struct {
@@ -62,7 +62,7 @@ func Connect(options *ClientOptions) (Client, error) {
 	}
 	if options.Token != "" {
 		opts = append(opts, grpc.WithPerRPCCredentials(
-			grpc_credentials.NewVanusPerRPCCredentials(options.Token)))
+			credentials.NewVanusPerRPCCredentials(options.Token)))
 	}
 	conn, err := grpc.Dial(options.Endpoint, opts...)
 	if err != nil {

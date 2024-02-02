@@ -21,8 +21,8 @@ import (
 	v2 "github.com/cloudevents/sdk-go/v2"
 	"google.golang.org/grpc"
 
-	"github.com/vanus-labs/vanus/proto/pkg/cloudevents"
-	proxypb "github.com/vanus-labs/vanus/proto/pkg/proxy"
+	"github.com/vanus-labs/vanus/api/cloudevents"
+	proxypb "github.com/vanus-labs/vanus/api/proxy"
 )
 
 type publisher struct {

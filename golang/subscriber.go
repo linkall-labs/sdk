@@ -25,8 +25,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	"github.com/vanus-labs/vanus/proto/pkg/cloudevents"
-	proxypb "github.com/vanus-labs/vanus/proto/pkg/proxy"
+	"github.com/vanus-labs/vanus/api/cloudevents"
+	proxypb "github.com/vanus-labs/vanus/api/proxy"
 )
 
 type ackCallback func(err error)

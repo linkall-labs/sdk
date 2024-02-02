@@ -24,10 +24,10 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
 	// first-party libraries.
-	"github.com/vanus-labs/vanus/pkg/errors"
-	ctrlpb "github.com/vanus-labs/vanus/proto/pkg/controller"
-	metapb "github.com/vanus-labs/vanus/proto/pkg/meta"
-	proxypb "github.com/vanus-labs/vanus/proto/pkg/proxy"
+	ctrlpb "github.com/vanus-labs/vanus/api/controller"
+	"github.com/vanus-labs/vanus/api/errors"
+	metapb "github.com/vanus-labs/vanus/api/meta"
+	proxypb "github.com/vanus-labs/vanus/api/proxy"
 )
 
 type eventbus struct {
